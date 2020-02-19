@@ -3,40 +3,8 @@ import 'package:flutter/material.dart';
 class RecordingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Record an Entry')),
-      body: _buildPage(),
-      drawer: drawer,
-    );
+    return  _buildPage();
   }
-
-  Widget drawer = Drawer(
-    child: ListView(
-      padding: EdgeInsets.zero,
-      children: const <Widget>[
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Text(
-            'Daily Diary',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-            ),
-          ),
-        ),
-        ListTile(
-          leading: Icon(Icons.message),
-          title: Text('Record New'),
-        ),
-        ListTile(
-          leading: Icon(Icons.account_circle),
-          title: Text('List Recordings'),
-        ),
-      ],
-    ),
-  );
 
   _buildPage() {
     return Container(
@@ -56,7 +24,7 @@ class RecordingScreen extends StatelessWidget {
       ));
 
   Widget recordSection = Container(
-      padding: const EdgeInsets.all(32),
+//      padding: const EdgeInsets.all(32),
       child: Column(children: [
         Icon(Icons.fiber_manual_record, color: Colors.red, size: 100),
         Text('15 Seconds')
@@ -74,7 +42,7 @@ class RecordingScreen extends StatelessWidget {
           ])));
 
   Widget saveSection = Container(
-      padding: const EdgeInsets.all(32),
+//      padding: const EdgeInsets.all(32),
       child: IconButton(
         icon: Icon(Icons.save),
         onPressed: () {},
