@@ -6,10 +6,39 @@ class RecordingScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Record an Entry')),
       body: _buildPage(),
+      drawer: drawer,
     );
   }
 
-  Widget _buildPage() {
+  Widget drawer = Drawer(
+    child: ListView(
+      padding: EdgeInsets.zero,
+      children: const <Widget>[
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+          ),
+          child: Text(
+            'Daily Diary',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+            ),
+          ),
+        ),
+        ListTile(
+          leading: Icon(Icons.message),
+          title: Text('Record New'),
+        ),
+        ListTile(
+          leading: Icon(Icons.account_circle),
+          title: Text('List Recordings'),
+        ),
+      ],
+    ),
+  );
+
+  _buildPage() {
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
@@ -45,7 +74,9 @@ class RecordingScreen extends StatelessWidget {
           ])));
 
   Widget saveSection = Container(
-    padding: const EdgeInsets.all(32),
-    child: IconButton(icon: Icon(Icons.save), onPressed: () { },)
-  );
+      padding: const EdgeInsets.all(32),
+      child: IconButton(
+        icon: Icon(Icons.save),
+        onPressed: () {},
+      ));
 }

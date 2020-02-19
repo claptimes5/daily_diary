@@ -13,10 +13,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Startup Name Generator',
-      theme: ThemeData(          // Add the 3 lines from here...
+      theme: ThemeData(
+        // Add the 3 lines from here...
         primaryColor: Colors.white,
       ),
       home: RecordingScreen(),
+
     );
   }
 }
@@ -31,12 +33,13 @@ class RandomWordsState extends State<RandomWords> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Startup Name Generator'),
-        actions: <Widget>[      // Add 3 lines from here...
+        actions: <Widget>[
+          // Add 3 lines from here...
           IconButton(icon: Icon(Icons.list), onPressed: _pushSaved),
         ],
       ),
-      body: _buildSuggestions(),
 
+      body: _buildSuggestions(),
     );
   }
 
@@ -45,15 +48,13 @@ class RandomWordsState extends State<RandomWords> {
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
           final Iterable<ListTile> tiles = _saved.map(
-                (WordPair pair) {
+            (WordPair pair) {
               return ListTile(
                 title: Text(
                   pair.asPascalCase,
                   style: _biggerFont,
                 ),
-                trailing: Icon(
-                  Icons.delete
-                ),
+                trailing: Icon(Icons.delete),
                 onTap: () {
                   setState(() {
                     _saved.remove(pair);
@@ -62,21 +63,20 @@ class RandomWordsState extends State<RandomWords> {
               );
             },
           );
-          final List<Widget> divided = ListTile
-              .divideTiles(
+          final List<Widget> divided = ListTile.divideTiles(
             context: context,
             tiles: tiles,
-          )
-              .toList();
+          ).toList();
 
-          return Scaffold(         // Add 6 lines from here...
+          return Scaffold(
+            // Add 6 lines from here...
             appBar: AppBar(
               title: Text('Saved Suggestions'),
             ),
             body: ListView(children: divided),
           );
         },
-      ),                       // ... to here.
+      ), // ... to here.
     );
   }
 
