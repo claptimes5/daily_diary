@@ -15,7 +15,7 @@ class _DiaryAppHomeState extends State<DiaryAppHome>
   void initState() {
     super.initState();
 
-    _tabController = TabController(vsync: this, initialIndex: 1, length: 2);
+    _tabController = TabController(vsync: this, initialIndex: 0, length: 2);
   }
 
   @override

@@ -1,16 +1,46 @@
 import 'package:flutter/material.dart';
 
-class RecordingScreen extends StatelessWidget {
+class RecordingScreen extends StatefulWidget {
+  @override
+  _RecordingScreenState createState() => _RecordingScreenState();
+}
+
+class _RecordingScreenState extends State<RecordingScreen> {
+  bool _isRecording = false;
+  final int _maxRecordingLength = 15;
+
   @override
   Widget build(BuildContext context) {
-    return  _buildPage();
+    return _buildPage();
   }
 
-  _buildPage() {
+  void _toggleRecording() {
+    setState(() {
+      if (_isRecording) {
+        _stopRecording();
+      } else {
+        _startRecording();
+      }
+    });
+  }
+
+  void _startRecording() {
+    setState(() {
+      _isRecording = true;
+    });
+  }
+
+  void _stopRecording() {
+    setState(() {
+      _isRecording = false;
+    });
+  }
+
+  Widget _buildPage() {
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
-          children: [titleSection, recordSection, playSection, saveSection],
+          children: [titleSection, recordSection(), playSection, saveSection],
         ));
   }
 
@@ -23,12 +53,16 @@ class RecordingScreen extends StatelessWidget {
         ),
       ));
 
-  Widget recordSection = Container(
-//      padding: const EdgeInsets.all(32),
-      child: Column(children: [
-        Icon(Icons.fiber_manual_record, color: Colors.red, size: 100),
-        Text('15 Seconds')
-      ]));
+  Widget recordSection() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+        child: Column(children: [
+          IconButton(icon: (_isRecording ? Icon(Icons.stop, color: Colors.grey, size: 100) : Icon(Icons.fiber_manual_record, color: Colors.red, size: 100)),
+              onPressed: _toggleRecording,
+          iconSize: 100,),
+          Text('15 Seconds')
+        ]));
+  }
 
   Widget playSection = Container(
       padding: const EdgeInsets.all(32),
