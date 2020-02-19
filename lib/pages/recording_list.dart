@@ -13,13 +13,21 @@ class RecordingListState extends State<RecordingList> {
   Widget build(BuildContext context) {
     return new ListView.builder(
       itemCount: dummyData.length,
-      itemBuilder: (context, i) =>
-      new Column(
+      itemBuilder: (context, i) => new Column(
         children: <Widget>[
           new Divider(
             height: 10.0,
           ),
           new ListTile(
+            trailing: IconButton(
+              icon: Icon(Icons.delete),
+              onPressed: () {
+                setState(() {
+                  dummyData.removeAt(i);
+                });
+              },
+            ),
+
 //            leading: new CircleAvatar(
 //              foregroundColor: Theme
 //                  .of(context)
