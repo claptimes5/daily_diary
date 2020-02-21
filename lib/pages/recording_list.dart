@@ -11,79 +11,70 @@ class RecordingList extends StatefulWidget {
 }
 
 class RecordingListState extends State<RecordingList> {
-  List<Recording> recordings = [];
+  Future<List<Recording>> recordings;
 
-  void initState() {
-    super.initState();
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      // your login goes here
+  Widget recordingListView() {
+    return FutureBuilder(
+      future: getRecordings(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          //print('project snapshot data is: ${projectSnap.data}');
+          return Container(child: Text('No Recordings Yet'));
+        } else if (snapshot.hasError) {
+          return Container(child: Text('Error getting data'));
+        } else {
+          final recordingList = snapshot.data;
 
-    getRecordings().then((data) {
-      recordings = data;
-    });
-    });
+          return ListView.builder(
+            itemCount: recordingList.length,
+            itemBuilder: (context, i) => new Column(
+              children: <Widget>[
+                new Divider(
+                  height: 10.0,
+                ),
+                new ListTile(
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      setState(() {
+                        dummyData.removeAt(i);
+                      });
+                    },
+                  ),
+                  title: new Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      new Text(
+                        recordingList[i].time.toIso8601String(),
+                        style:
+                            new TextStyle(color: Colors.grey, fontSize: 14.0),
+                      ),
+                    ],
+                  ),
+                  subtitle: new Container(
+                    padding: const EdgeInsets.only(top: 5.0),
+                    child: new Text(
+                      'Washington, D.C.',
+                      style: new TextStyle(color: Colors.grey, fontSize: 15.0),
+                    ),
+                  ),
+                )
+              ],
+            ),
+          );
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-
-
-
-    return new ListView.builder(
-      itemCount: recordings.length,
-      itemBuilder: (context, i) => new Column(
-        children: <Widget>[
-          new Divider(
-            height: 10.0,
-          ),
-          new ListTile(
-            trailing: IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: () {
-                setState(() {
-                  dummyData.removeAt(i);
-                });
-              },
-            ),
-
-//            leading: new CircleAvatar(
-//              foregroundColor: Theme
-//                  .of(context)
-//                  .primaryColor,
-//              backgroundColor: Colors.grey,
-//              backgroundImage: new NetworkImage(dummyData[i].avatarUrl),
-//            ),
-            title: new Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-//                new Text(
-//                  dummyData[i].name,
-//                  style: new TextStyle(fontWeight: FontWeight.bold),
-//                ),
-                new Text(
-                  recordings[i].time.toIso8601String(),
-                  style: new TextStyle(color: Colors.grey, fontSize: 14.0),
-                ),
-              ],
-            ),
-            subtitle: new Container(
-              padding: const EdgeInsets.only(top: 5.0),
-              child: new Text(
-                'Washington, D.C.',
-                style: new TextStyle(color: Colors.grey, fontSize: 15.0),
-              ),
-            ),
-          )
-        ],
-      ),
-    );
+    return recordingListView();
   }
-
-
 
   Future<List<Recording>> getRecordings() async {
 //    final RecordingProvider rp = RecordingProvider().open(path)
-    
+
     final DatabaseAccessor da = DatabaseAccessor();
 
     return da.recordings();
