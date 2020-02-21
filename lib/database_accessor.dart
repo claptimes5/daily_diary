@@ -63,4 +63,10 @@ class DatabaseAccessor {
       );
     });
   }
+
+  Future<int> delete(int id) async {
+    final Database db = await getDatabase();
+
+    return await db.delete('recordings', where: 'id = ?', whereArgs: [id]);
+  }
 }

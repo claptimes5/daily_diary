@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
-import 'package:diary_app/models/recording_provider.dart';
 
 class RecordingList extends StatefulWidget {
   @override
@@ -11,7 +10,13 @@ class RecordingList extends StatefulWidget {
 }
 
 class RecordingListState extends State<RecordingList> {
-  Future<List<Recording>> recordings;
+  List<Recording> recordings;
+  final DatabaseAccessor da = DatabaseAccessor();
+
+//  @override
+//  void initState() {
+//    super.initState();
+//  }
 
   Widget recordingListView() {
     return FutureBuilder(
@@ -23,10 +28,10 @@ class RecordingListState extends State<RecordingList> {
         } else if (snapshot.hasError) {
           return Container(child: Text('Error getting data'));
         } else {
-          final recordingList = snapshot.data;
+          recordings = snapshot.data;
 
           return ListView.builder(
-            itemCount: recordingList.length,
+            itemCount: recordings.length,
             itemBuilder: (context, i) => new Column(
               children: <Widget>[
                 new Divider(
@@ -36,8 +41,9 @@ class RecordingListState extends State<RecordingList> {
                   trailing: IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
+                      da.delete(recordings[i].id);
                       setState(() {
-                        dummyData.removeAt(i);
+                        recordings.removeAt(i);
                       });
                     },
                   ),
@@ -45,7 +51,7 @@ class RecordingListState extends State<RecordingList> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
                       new Text(
-                        recordingList[i].time.toIso8601String(),
+                        recordings[i].time.toIso8601String(),
                         style:
                             new TextStyle(color: Colors.grey, fontSize: 14.0),
                       ),
@@ -73,9 +79,7 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Future<List<Recording>> getRecordings() async {
-//    final RecordingProvider rp = RecordingProvider().open(path)
 
-    final DatabaseAccessor da = DatabaseAccessor();
 
     return da.recordings();
   }
