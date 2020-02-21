@@ -148,6 +148,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     if (_fileSaved) {
       return;
     }
+    try {
 
     //TODO: make on subdirectory per month
     final tmpRecording = File(this._path);
@@ -166,7 +167,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     final exists = await dir.exists();
 
     // Copy temp file to new directory
-    try {
+
       final file = await tmpRecording.copy(fullFilePath);
 
       final DatabaseAccessor da = DatabaseAccessor();
@@ -176,8 +177,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
       setState(() {
         this._fileSaved = true;
       });
-    } on FileSystemException catch (e) {
+    } catch (e) {
       print('did not save file');
+      print(e.toString());
       _saveFailed();
     }
   }
