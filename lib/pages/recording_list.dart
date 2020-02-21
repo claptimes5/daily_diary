@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
+import 'package:diary_app/database_accessor.dart';
+import 'package:diary_app/models/recording_provider.dart';
 
 class RecordingList extends StatefulWidget {
   @override
@@ -9,10 +11,26 @@ class RecordingList extends StatefulWidget {
 }
 
 class RecordingListState extends State<RecordingList> {
+  List<Recording> recordings = [];
+
+  void initState() {
+    super.initState();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      // your login goes here
+
+    getRecordings().then((data) {
+      recordings = data;
+    });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+
+
+
     return new ListView.builder(
-      itemCount: dummyData.length,
+      itemCount: recordings.length,
       itemBuilder: (context, i) => new Column(
         children: <Widget>[
           new Divider(
@@ -43,7 +61,7 @@ class RecordingListState extends State<RecordingList> {
 //                  style: new TextStyle(fontWeight: FontWeight.bold),
 //                ),
                 new Text(
-                  dummyData[i].time.toIso8601String(),
+                  recordings[i].time.toIso8601String(),
                   style: new TextStyle(color: Colors.grey, fontSize: 14.0),
                 ),
               ],
@@ -59,5 +77,15 @@ class RecordingListState extends State<RecordingList> {
         ],
       ),
     );
+  }
+
+
+
+  Future<List<Recording>> getRecordings() async {
+//    final RecordingProvider rp = RecordingProvider().open(path)
+    
+    final DatabaseAccessor da = DatabaseAccessor();
+
+    return da.recordings();
   }
 }

@@ -4,18 +4,18 @@ import 'package:diary_app/pages/recording_screen.dart';
 
 class DiaryAppHome extends StatefulWidget {
   @override
-  _DiaryAppHomeState createState() => _DiaryAppHomeState();
+  DiaryAppHomeState createState() => DiaryAppHomeState();
 }
 
-class _DiaryAppHomeState extends State<DiaryAppHome>
+class DiaryAppHomeState extends State<DiaryAppHome>
     with SingleTickerProviderStateMixin {
-  TabController _tabController;
+  TabController tabController;
 
   @override
   void initState() {
     super.initState();
 
-    _tabController = TabController(vsync: this, initialIndex: 0, length: 2);
+    tabController = TabController(vsync: this, initialIndex: 0, length: 2);
   }
 
   @override
@@ -25,7 +25,7 @@ class _DiaryAppHomeState extends State<DiaryAppHome>
         title: Text("Daily Diary"),
         elevation: 0.7,
         bottom: TabBar(
-          controller: _tabController,
+          controller: tabController,
           indicatorColor: Colors.white,
           tabs: <Widget>[
             Tab(text: "Record New"),
@@ -43,7 +43,7 @@ class _DiaryAppHomeState extends State<DiaryAppHome>
         ],
       ),
       body: TabBarView(
-        controller: _tabController,
+        controller: tabController,
         children: <Widget>[
           RecordingScreen(),
           RecordingList(),

@@ -4,12 +4,16 @@
 
 import 'package:flutter/material.dart';
 import 'diary_app_home.dart';
+import 'database_accessor.dart';
 
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final DatabaseAccessor da = DatabaseAccessor();
+    da.createRecordingsTable();
+
     return MaterialApp(
       title: 'Startup Name Generator',
       theme: ThemeData(
