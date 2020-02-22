@@ -34,16 +34,19 @@ class _RecordingScreenState extends State<RecordingScreen> {
   void initState() {
     super.initState();
     flutterSound = new FlutterSound();
-//    flutterSound.setSubscriptionDuration(0.01);
-//    flutterSound.setDbPeakLevelUpdate(0.8);
-//    flutterSound.setDbLevelEnabled(true);
+    flutterSound.setSubscriptionDuration(0.01);
+    flutterSound.setDbPeakLevelUpdate(0.8);
+    flutterSound.setDbLevelEnabled(true);
 //    initializeDateFormatting();
   }
 
   @override
   void dispose() {
+    flutterSound.stopPlayer().catchError((e, trace) {
+      print('Stop player failed because it was not running');
+    }, test: (e) => e is PlayerRunningException);
     flutterSound.stopRecorder().catchError((e, trace) {
-      print('Dispose recorder failed because it was not running');
+      print('Stop recorder failed because it was not running');
     }, test: (e) => e is RecorderStoppedException);
     super.dispose();
   }
@@ -159,7 +162,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
     String fullDirPath = p.join(appDocPath, diaryEntryDir);
 //    String fullDirPath = diaryEntryDir;
-    String fullFilePath = p.join(appDocPath, diaryEntryDir, DateTime.now().toIso8601String());
+      String fileName = DateTime.now().toIso8601String() + '.acc';
+    String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
 //    String fullFilePath =
 //        p.join(diaryEntryDir, DateTime.now().toIso8601String());
 
@@ -259,7 +263,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 children: [
               IconButton(
                   icon: (_isPlaying ? Icon(Icons.stop, size: 70) : Icon(Icons.play_arrow, size: 70)),
-                  onPressed: startPlayer,
+                  onPressed: (_isPlaying ? stopPlayer : startPlayer),
                   iconSize: 70),
             ])));
   }

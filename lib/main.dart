@@ -9,6 +9,7 @@ import 'database_accessor.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     final DatabaseAccessor da = DatabaseAccessor();

@@ -19,7 +19,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_sound: ^2.0.4
+  flutter_sound: ^2.0.5
+#  flutter_sound:
+#    path: ../flutter_sound
   intl: ^0.16.1
   sqflite:
   path_provider: ^1.6.0

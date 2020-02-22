@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
@@ -15,8 +17,18 @@ class RecordingList extends StatefulWidget {
 class RecordingListState extends State<RecordingList> {
   List<Recording> recordings;
   final DatabaseAccessor da = DatabaseAccessor();
-  FlutterSound flutterSound = new FlutterSound();
+  FlutterSound flutterSound;
   int recordPlaying;
+  StreamSubscription _playerSubscription;
+
+
+  void initState() {
+    super.initState();
+    flutterSound = new FlutterSound();
+    flutterSound.setSubscriptionDuration(0.01);
+    flutterSound.setDbPeakLevelUpdate(0.8);
+    flutterSound.setDbLevelEnabled(true);
+  }
 
   Widget recordingListView() {
     return FutureBuilder(
@@ -67,10 +79,13 @@ class RecordingListState extends State<RecordingList> {
           ),
           new ListTile(
             trailing: IconButton(
-              icon: Icon(Icons.delete),
+              icon: (item.id == recordPlaying ? Icon(Icons.stop) : Icon(Icons.play_circle_filled)),
               onPressed: () {
-                da.delete(item.id);
-                setState(() {});
+                if (item.id == recordPlaying) {
+                  stopPlayer();
+                } else {
+                  playRecording(item);
+                }
               },
             ),
             title: new Row(
@@ -98,6 +113,14 @@ class RecordingListState extends State<RecordingList> {
   }
 
   @override
+  void dispose() {
+    flutterSound.stopPlayer().catchError((e, trace) {
+      print('Stop player failed because it was not running');
+    }, test: (e) => e is PlayerRunningException);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return recordingListView();
   }
@@ -107,40 +130,67 @@ class RecordingListState extends State<RecordingList> {
   }
 
   void playRecording(Recording recording){
-    startPlayer(recording.path);
-    setState(() {
-      recordPlaying = recording.id;
-    });
+    startPlayer(recording);
+
   }
 
-  void startPlayer(path) async {
+  void startPlayer(recording) async {
+    String path = recording.path;
+    print('startPlayer called');
+    print('playing status: ${flutterSound.audioState}');
     try {
-      stopPlayer();
+      print('stopping player');
+      await stopPlayer();
 
-      String path;
-      if (await fileExists(path))
+      print('playing file');
+      print(path);
+      if (await fileExists(path)) {
         path = await flutterSound.startPlayer(path);
-
-      if (path == null) {
-        print('Error starting player');
-        return;
       }
 
       print('startPlayer: $path');
       await flutterSound.setVolume(1.0);
 
+      _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
+        if (e != null) {
+          if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
+            setState(() {
+              recordPlaying = null;
+            });
+          }
+        }
+      });
+
+      setState(() {
+        recordPlaying = recording.id;
+      });
     } catch (err) {
       print('error: $err');
     }
     setState(() {});
   }
 
-  void stopPlayer() async {
+  Future stopPlayer() async {
+    print('stopPlayer called');
+print('playing status: ${flutterSound.audioState}');
     try {
-      await flutterSound.stopPlayer();
+      if (flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING) {
+        String result = await flutterSound.stopPlayer();
+        print('stopPlayer: $result');
+      }
+
+      if (_playerSubscription != null) {
+        _playerSubscription.cancel();
+        _playerSubscription = null;
+      }
+
     } catch (err) {
       print('error: $err');
     }
+
+    setState(() {
+      recordPlaying = null;
+    });
   }
 
   Future<List<Recording>> getRecordings() async {

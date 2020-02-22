@@ -21,7 +21,7 @@ class DatabaseAccessor {
 
       onCreate: (db, version) {
         return db.execute(
-          "CREATE TABLE recordings(id INTEGER PRIMARY KEY auto increment, time TEXT, path TEXT)",
+          "CREATE TABLE recordings(id INTEGER PRIMARY KEY autoincrement, time TEXT, path TEXT)",
         );
       },
       version: 1,
