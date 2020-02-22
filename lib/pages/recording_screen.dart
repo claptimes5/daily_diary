@@ -129,23 +129,29 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
         if (e != null) {
-//          sliderCurrentPosition = e.currentPosition;
-//          maxDuration = e.duration;
+
+          if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
+            setState(() {
+              this._isPlaying = false;
+            });
+          }
+
 
           DateTime date = new DateTime.fromMillisecondsSinceEpoch(
               e.currentPosition.toInt(),
               isUtc: true);
 //          String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
-          this.setState(() {
-            this._isPlaying = true;
-//            this.playerText = txt.substring(0, 8);
-          });
+
         }
+      });
+
+      this.setState(() {
+        this._isPlaying = true;
+//            this.playerText = txt.substring(0, 8);
       });
     } catch (err) {
       print('error: $err');
     }
-    setState(() {});
   }
 
   void stopPlayer() async {
@@ -197,6 +203,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       tmpRecording.deleteSync();
       setState(() {
+        this._isPlaying = false;
         this._fileSaved = true;
         this.recorderText = '0';
       });
@@ -289,6 +296,15 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget playSection() {
+    Function onpressed;
+    if (_isRecording || _path == null) {
+      onpressed = null;
+    } else if (_isPlaying) {
+      onpressed = stopPlayer;
+    } else {
+      onpressed = startPlayer;
+    }
+
     return Container(
         padding: const EdgeInsets.all(32),
         child: Center(
@@ -298,7 +314,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 children: [
               IconButton(
                   icon: (_isPlaying ? Icon(Icons.stop, size: 70) : Icon(Icons.play_arrow, size: 70)),
-                  onPressed: (_isPlaying ? stopPlayer : startPlayer),
+                  onPressed: onpressed,
                   iconSize: 70),
             ])));
   }
