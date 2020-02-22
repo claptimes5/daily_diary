@@ -21,6 +21,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
   String _path;
   FlutterSound flutterSound;
   StreamSubscription _playerSubscription;
+  StreamSubscription _recorderSubscription;
+  String recorderText = '0';
   String playerText = '15';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
@@ -71,6 +73,17 @@ class _RecordingScreenState extends State<RecordingScreen> {
       );
       print('startRecorder: $path');
 
+      _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
+        DateTime date = new DateTime.fromMillisecondsSinceEpoch(
+            e.currentPosition.toInt(),
+            isUtc: true);
+        String txt = DateFormat('mm:ss:SS', 'en_US').format(date);
+
+        this.setState(() {
+          this.recorderText = txt.substring(0, 8);
+        });
+      });
+
       setState(() {
         _isRecording = true;
         this._path = path;
@@ -88,6 +101,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
     try {
       String result = await flutterSound.stopRecorder();
       print('stopRecorder: $result');
+
+      if ( _recorderSubscription != null ) {
+        _recorderSubscription.cancel ();
+        _recorderSubscription = null;
+      }
     } catch (err) {
       print('stopRecorder error: $err');
     }
@@ -180,6 +198,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       tmpRecording.deleteSync();
       setState(() {
         this._fileSaved = true;
+        this.recorderText = '0';
       });
     } catch (e) {
       print('did not save file');
@@ -223,20 +242,36 @@ class _RecordingScreenState extends State<RecordingScreen> {
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
-          children: [titleSection, recordSection(), playSection(), saveSection()],
+          children: [titleSection(), recordSection(), playSection(), saveSection()],
         ));
   }
 
-  Widget titleSection = Container(
-      padding: const EdgeInsets.all(32),
-      child: Text(
-        'Record for today __',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-        ),
-      ));
+  String currentDate() {
+    final d = DateTime.now();
+    return '${d.month}/${d.day}/${d.year}';
+  }
+
+  Widget titleSection() {
+    return Container(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          'Record for today ${currentDate()}',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ));
+  }
 
   Widget recordSection() {
+    Widget statusText;
+    if (_fileSaved) {
+      statusText = Text('Saved');
+    } else if (_isRecording) {
+      statusText = Text('Recording');
+    } else {
+      statusText = Text('Ready to record');
+    }
+
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(children: [
@@ -248,8 +283,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
             onPressed: _toggleRecording,
             iconSize: 100,
           ),
-          Text(playerText),
-          (_fileSaved ? Text('Saved') : Text('Recording')),
+          Text(recorderText),
+          statusText,
         ]));
   }
 
