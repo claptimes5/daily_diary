@@ -7,7 +7,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:diary_app/database_accessor.dart';
 import 'package:diary_app/models/recording.dart';
-import 'package:diary_app/models/recording_provider.dart';
 
 class RecordingScreen extends StatefulWidget {
   @override
@@ -203,6 +202,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       tmpRecording.deleteSync();
       setState(() {
+        this._path = null;
         this._isPlaying = false;
         this._fileSaved = true;
         this.recorderText = '0';
@@ -284,11 +284,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
         child: Column(children: [
           IconButton(
             icon: (_isRecording
-                ? Icon(Icons.stop, color: Colors.grey, size: 100)
+                ? Icon(Icons.stop, color: Colors.black, size: 140)
                 : Icon(Icons.fiber_manual_record,
-                    color: Colors.red, size: 100)),
+                    color: Colors.red, size: 140)),
             onPressed: _toggleRecording,
-            iconSize: 100,
+            iconSize: 140,
           ),
           Text(recorderText),
           statusText,
@@ -320,11 +320,18 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget saveSection() {
+    Function onpressed;
+    if (_isRecording || _path == null) {
+      onpressed = null;
+    } else {
+      onpressed = saveRecording;
+    }
+
     return Container(
 //      padding: const EdgeInsets.all(32),
         child: IconButton(
             icon: Icon(Icons.save, size: 70),
-            onPressed: saveRecording,
+            onPressed: onpressed,
             iconSize: 70));
   }
 }

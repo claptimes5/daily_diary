@@ -53,6 +53,12 @@ class RecordingListState extends State<RecordingList> {
     );
   }
 
+  void deleteRecording(Recording r) {
+    File(r.path).deleteSync();
+
+    da.delete(r.id);
+  }
+
   Widget listItem(item, index) {
     return Dismissible(
       background: Container(color: Colors.red),
@@ -61,7 +67,8 @@ class RecordingListState extends State<RecordingList> {
       onDismissed: (direction) {
         int id = item.id;
         setState(() {
-          da.delete(id);
+          deleteRecording(item);
+
           setState(() {
             recordings.removeAt(index);
           });
