@@ -42,6 +42,10 @@ class RecordingListState extends State<RecordingList> {
         } else {
           recordings = snapshot.data;
 
+          if (recordings.isEmpty) {
+            return Container(child: Center(child: Text('No Recordings Yet')));
+          }
+
           return ListView.builder(
             itemCount: recordings.length,
             itemBuilder: (context, i) {
@@ -173,6 +177,7 @@ class RecordingListState extends State<RecordingList> {
       });
     } catch (err) {
       print('error: $err');
+      stopPlayer();
     }
     setState(() {});
   }

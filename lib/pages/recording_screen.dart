@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:diary_app/database_accessor.dart';
 import 'package:diary_app/models/recording.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/scheduler.dart';
 
 class RecordingScreen extends StatefulWidget {
   @override
@@ -41,6 +43,59 @@ class _RecordingScreenState extends State<RecordingScreen> {
 //    initializeDateFormatting();
   }
 
+  Future<void> alertDialog(String title, String text, String buttonText) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(text),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text(buttonText),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void requestPermissions() async {
+    Map<PermissionGroup, PermissionStatus> permissions =
+        await PermissionHandler().requestPermissions(
+            [PermissionGroup.storage, PermissionGroup.microphone]);
+  }
+
+  Future<bool> checkPermissions() async {
+    PermissionStatus permissionStorage = await PermissionHandler()
+        .checkPermissionStatus(PermissionGroup.storage);
+    PermissionStatus permissionMicrophone = await PermissionHandler()
+        .checkPermissionStatus(PermissionGroup.microphone);
+
+    PermissionStatus permissionGranted = PermissionStatus.granted;
+
+    if (permissionStorage.value != permissionGranted.value ||
+        permissionMicrophone.value != permissionGranted.value) {
+      alertDialog('Microphone and Storage permissions required',
+          'Please grant permissions so your voice can be recorded.', 'OK');
+      requestPermissions();
+
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   @override
   void dispose() {
     flutterSound.stopPlayer().catchError((e, trace) {
@@ -66,6 +121,12 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   void _startRecording() async {
+    checkPermissions().then((permissionsGranted) {
+      if (!permissionsGranted) {
+        return;
+      }
+    });
+
     try {
       String path = await flutterSound.startRecorder(
         codec: t_CODEC.CODEC_AAC,
@@ -101,8 +162,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
       String result = await flutterSound.stopRecorder();
       print('stopRecorder: $result');
 
-      if ( _recorderSubscription != null ) {
-        _recorderSubscription.cancel ();
+      if (_recorderSubscription != null) {
+        _recorderSubscription.cancel();
         _recorderSubscription = null;
       }
     } catch (err) {
@@ -128,13 +189,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
         if (e != null) {
-
           if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
             setState(() {
               this._isPlaying = false;
             });
           }
-
 
           DateTime date = new DateTime.fromMillisecondsSinceEpoch(
               e.currentPosition.toInt(),
@@ -175,25 +234,24 @@ class _RecordingScreenState extends State<RecordingScreen> {
       return;
     }
     try {
+      //TODO: make on subdirectory per month
+      final tmpRecording = File(this._path);
 
-    //TODO: make on subdirectory per month
-    final tmpRecording = File(this._path);
+      // Create directory for files
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String appDocPath = appDocDir.path;
 
-    // Create directory for files
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-
-    String fullDirPath = p.join(appDocPath, diaryEntryDir);
+      String fullDirPath = p.join(appDocPath, diaryEntryDir);
 //    String fullDirPath = diaryEntryDir;
       String fileName = DateTime.now().toIso8601String() + '.acc';
-    String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
+      String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
 //    String fullFilePath =
 //        p.join(diaryEntryDir, DateTime.now().toIso8601String());
 
-    Directory dir = await Directory(fullDirPath).create(recursive: true);
-    final exists = await dir.exists();
+      Directory dir = await Directory(fullDirPath).create(recursive: true);
+      final exists = await dir.exists();
 
-    // Copy temp file to new directory
+      // Copy temp file to new directory
 
       final file = await tmpRecording.copy(fullFilePath);
 
@@ -210,35 +268,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
     } catch (e) {
       print('did not save file');
       print(e.toString());
-      _saveFailed();
+      alertDialog('Save Failed', 'Please try again', 'OK');
     }
-  }
-
-  Future<void> _saveFailed() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Save Failed'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Please try again.'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text('Ok'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Future<bool> fileExists(String path) async {
@@ -249,7 +280,12 @@ class _RecordingScreenState extends State<RecordingScreen> {
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
-          children: [titleSection(), recordSection(), playSection(), saveSection()],
+          children: [
+            titleSection(),
+            recordSection(),
+            playSection(),
+            saveSection()
+          ],
         ));
   }
 
@@ -260,7 +296,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Widget titleSection() {
     return Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(4),
         child: Text(
           'Record for today ${currentDate()}',
           style: TextStyle(
@@ -313,7 +349,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
               IconButton(
-                  icon: (_isPlaying ? Icon(Icons.stop, size: 70) : Icon(Icons.play_arrow, size: 70)),
+                  icon: (_isPlaying
+                      ? Icon(Icons.stop, size: 70)
+                      : Icon(Icons.play_arrow, size: 70)),
                   onPressed: onpressed,
                   iconSize: 70),
             ])));

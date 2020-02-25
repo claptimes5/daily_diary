@@ -51,4 +51,6 @@ class DiaryAppHomeState extends State<DiaryAppHome>
       ),
     );
   }
+
+
 }
