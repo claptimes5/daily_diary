@@ -18,7 +18,7 @@ class RecordingScreen extends StatefulWidget {
 class _RecordingScreenState extends State<RecordingScreen> {
   bool _isRecording = false;
   bool _isPlaying = false;
-  final int _maxRecordingLength = 15;
+  final int _maxRecordingLength = 15000;
   String _path;
   FlutterSound flutterSound;
   StreamSubscription _playerSubscription;
@@ -134,13 +134,23 @@ class _RecordingScreenState extends State<RecordingScreen> {
       print('startRecorder: $path');
 
       _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
+        int timeRemaining = _maxRecordingLength - e.currentPosition.toInt();
+        if (timeRemaining < 0)
+          timeRemaining = 0;
+
         DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-            e.currentPosition.toInt(),
+            timeRemaining,
             isUtc: true);
-        String txt = DateFormat('mm:ss:SS', 'en_US').format(date);
+        String txt = DateFormat('ss:SS', 'en_US').format(date);
+
+        if (e.currentPosition.toInt() >= _maxRecordingLength) {
+          print(_maxRecordingLength);
+          print(e.currentPosition.toInt());
+         _stopRecording();
+        }
 
         this.setState(() {
-          this.recorderText = txt.substring(0, 8);
+          this.recorderText = '${txt.substring(0, 5)} seconds';
         });
       });
 
