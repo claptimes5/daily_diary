@@ -38,8 +38,3 @@ class Recording {
   }
 }
 
-List<Recording> dummyData = [
-  new Recording(id: 0, time: DateTime.now(), path: 'test.acc'),
-  new Recording(id: 1, time: DateTime.now(), path: 'test1.acc'),
-  new Recording(id: 2, time: DateTime.now(), path: 'test2.acc'),
-];
