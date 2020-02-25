@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:intl/date_symbol_data_file.dart';
 import 'dart:io';
 
-import 'package:intl/intl.dart' show DateFormat;
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 
 class RecordingList extends StatefulWidget {
@@ -31,7 +31,7 @@ class RecordingListState extends State<RecordingList> {
     flutterSound.setSubscriptionDuration(0.01);
     flutterSound.setDbPeakLevelUpdate(0.8);
     flutterSound.setDbLevelEnabled(true);
-    initializeDateFormatting('en_US', null);
+    initializeDateFormatting();
   }
 
   Widget recordingListView() {
@@ -68,7 +68,7 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Widget listItem(item, index) {
-    final formatter = new DateFormat('MMMM dd, yyyy - h:mm a', 'en_US');
+    final formatter = new DateFormat('MMMM dd, yyyy - h:mm a');
 
     return Dismissible(
       background: Container(color: Colors.red),
