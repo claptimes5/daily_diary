@@ -9,7 +9,6 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-
 class RecordingList extends StatefulWidget {
   @override
   RecordingListState createState() {
@@ -22,8 +21,15 @@ class RecordingListState extends State<RecordingList> {
   final DatabaseAccessor da = DatabaseAccessor();
   FlutterSound flutterSound;
   int recordPlaying;
+  bool _filterOpen = false;
   StreamSubscription _playerSubscription;
-
+  List<Map> dateRangeOptions = [
+    {'name': '1 week', 'value': '1_week'},
+    {'name': '1 month', 'value': '1_month'},
+    {'name': '1 year', 'value': '1_year'},
+    {'name': 'All', 'value': 'all'}
+  ];
+  String _filterOption = 'all';
 
   void initState() {
     super.initState();
@@ -51,11 +57,10 @@ class RecordingListState extends State<RecordingList> {
           }
 
           return ListView.builder(
-            itemCount: recordings.length,
-            itemBuilder: (context, i) {
-              return listItem(recordings[i], i);
-            }
-          );
+              itemCount: recordings.length,
+              itemBuilder: (context, i) {
+                return listItem(recordings[i], i);
+              });
         }
       },
     );
@@ -67,13 +72,47 @@ class RecordingListState extends State<RecordingList> {
     da.delete(r.id);
   }
 
+  Widget filterBar() {
+    List<Widget> filterBarContents = [
+      Container(
+          padding: EdgeInsets.only(left: 10.0, right: 5.0),
+          child: Row(children: [
+            Expanded(child: Text('Filter Options')),
+            IconButton(
+              icon: Icon(Icons.filter_list),
+              onPressed: () {
+                setState(() {
+                  _filterOpen = !_filterOpen;
+                });
+              },
+            ),
+          ]))
+    ];
+
+    if (_filterOpen) {
+      filterBarContents += dateRangeOptions.map((element) {
+        return RadioListTile(
+          title: Text(element['name']),
+            value: element['value'],
+            groupValue: _filterOption,
+            onChanged: (value) {
+              setState(() {
+                _filterOption = value;
+              });
+            },
+        );
+      }).toList();
+    }
+
+    return Column(children: filterBarContents);
+  }
+
   Widget listItem(item, index) {
     final formatter = new DateFormat('MMMM dd, yyyy - h:mm a');
 
     return Dismissible(
       background: Container(color: Colors.red),
       key: Key(item.id.toString()),
-
       onDismissed: (direction) {
         int id = item.id;
         setState(() {
@@ -85,8 +124,7 @@ class RecordingListState extends State<RecordingList> {
         });
 
         // Show a snackbar. This snackbar could also contain "Undo" actions.
-        Scaffold
-            .of(context)
+        Scaffold.of(context)
             .showSnackBar(SnackBar(content: Text("$id dismissed")));
       },
       child: new Column(
@@ -96,7 +134,9 @@ class RecordingListState extends State<RecordingList> {
           ),
           new ListTile(
             trailing: IconButton(
-              icon: (item.id == recordPlaying ? Icon(Icons.stop) : Icon(Icons.play_circle_filled)),
+              icon: (item.id == recordPlaying
+                  ? Icon(Icons.stop)
+                  : Icon(Icons.play_circle_filled)),
               onPressed: () {
                 if (item.id == recordPlaying) {
                   stopPlayer();
@@ -109,9 +149,8 @@ class RecordingListState extends State<RecordingList> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 new Text(
-                    formatter.format(item.time),
-                  style:
-                  new TextStyle(color: Colors.grey, fontSize: 14.0),
+                  formatter.format(item.time),
+                  style: new TextStyle(color: Colors.grey, fontSize: 14.0),
                 ),
               ],
             ),
@@ -126,7 +165,6 @@ class RecordingListState extends State<RecordingList> {
         ],
       ),
     );
-
   }
 
   @override
@@ -139,14 +177,15 @@ class RecordingListState extends State<RecordingList> {
 
   @override
   Widget build(BuildContext context) {
-    return recordingListView();
+    return Column(
+        children: [filterBar(), Expanded(child: recordingListView())]);
   }
 
   Future<bool> fileExists(String path) async {
     return await File(path).exists();
   }
 
-  void playRecording(Recording recording){
+  void playRecording(Recording recording) {
     startPlayer(recording);
   }
 
@@ -189,7 +228,7 @@ class RecordingListState extends State<RecordingList> {
 
   Future stopPlayer() async {
     print('stopPlayer called');
-print('playing status: ${flutterSound.audioState}');
+    print('playing status: ${flutterSound.audioState}');
     try {
       if (flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING) {
         String result = await flutterSound.stopPlayer();
@@ -200,7 +239,6 @@ print('playing status: ${flutterSound.audioState}');
         _playerSubscription.cancel();
         _playerSubscription = null;
       }
-
     } catch (err) {
       print('error: $err');
     }
@@ -211,8 +249,35 @@ print('playing status: ${flutterSound.audioState}');
   }
 
   Future<List<Recording>> getRecordings() async {
+    DateTime now = DateTime.now();
+    DateTime startTime = DateTime.fromMillisecondsSinceEpoch(0);
+    DateTime endTime = now;
 
+    switch (_filterOption) {
+      case '1_week':
+        {
+          print(_filterOption);
+          startTime = now.subtract(Duration(days: 7));
+        }
+        break;
+      case '1_month':
+        {
+          print(_filterOption);
+          startTime = now.subtract(Duration(days: 31));
+        }
+        break;
 
-    return da.recordings();
+      case '1_year':
+        {
+          print(_filterOption);
+          startTime = now.subtract(Duration(days: 365));
+        }
+        break;
+
+      default:
+        startTime = DateTime.fromMillisecondsSinceEpoch(0);
+    }
+
+    return da.recordings(startTime: startTime, endTime: endTime);
   }
 }
