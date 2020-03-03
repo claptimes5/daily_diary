@@ -67,14 +67,11 @@ class DatabaseAccessor {
       whereArgs.add(endTime.toIso8601String());
     }
 
-    print(whereClause);
-
     // Query the table for all The Dogs.
     final List<Map<String, dynamic>> maps = await db.query('recordings', where: whereClause, whereArgs: whereArgs);
 
     // Convert the List<Map<String, dynamic> into a List<Dog>.
     return List.generate(maps.length, (i) {
-      print(maps[i]['time']);
       return Recording(
         id: maps[i]['id'],
         time: DateTime.parse(maps[i]['time']),
