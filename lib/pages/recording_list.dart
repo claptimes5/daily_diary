@@ -73,11 +73,13 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Widget filterBar() {
+    String filterText = 'Display: ${_filterOption}';
+
     List<Widget> filterBarContents = [
       Container(
           padding: EdgeInsets.only(left: 10.0, right: 5.0),
           child: Row(children: [
-            Expanded(child: Text('Filter Options')),
+            Expanded(child: Text(filterText)),
             IconButton(
               icon: Icon(Icons.filter_list),
               onPressed: () {
@@ -109,6 +111,11 @@ class RecordingListState extends State<RecordingList> {
 
   Widget listItem(item, index) {
     final formatter = new DateFormat('MMMM dd, yyyy - h:mm a');
+    Color backgroundColor;
+    Color textColor;
+
+    backgroundColor = (recordPlaying == item.id ? Colors.greenAccent : Colors.transparent);
+    textColor = (recordPlaying == item.id ? Colors.white : Colors.black);
 
     return Dismissible(
       background: Container(color: Colors.red),
@@ -129,10 +136,12 @@ class RecordingListState extends State<RecordingList> {
       },
       child: new Column(
         children: <Widget>[
-          new Divider(
+          Divider(
             height: 10.0,
           ),
-          new ListTile(
+      Container(
+        color: backgroundColor,
+            child: ListTile(
             trailing: IconButton(
               icon: (item.id == recordPlaying
                   ? Icon(Icons.stop)
@@ -150,7 +159,7 @@ class RecordingListState extends State<RecordingList> {
               children: <Widget>[
                 new Text(
                   formatter.format(item.time),
-                  style: new TextStyle(color: Colors.grey, fontSize: 14.0),
+                  style: new TextStyle(color: textColor, fontSize: 14.0),
                 ),
               ],
             ),
@@ -158,10 +167,11 @@ class RecordingListState extends State<RecordingList> {
               padding: const EdgeInsets.only(top: 5.0),
               child: new Text(
                 'Washington, D.C.',
-                style: new TextStyle(color: Colors.grey, fontSize: 15.0),
+                style: new TextStyle(color: textColor, fontSize: 15.0),
               ),
             ),
           )
+      )
         ],
       ),
     );
