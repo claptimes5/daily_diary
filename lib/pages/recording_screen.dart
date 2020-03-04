@@ -23,7 +23,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   FlutterSound flutterSound;
   StreamSubscription _playerSubscription;
   StreamSubscription _recorderSubscription;
-  String recorderText = '0';
+  String recorderText = '15:00 seconds';
   String playerText = '15';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
@@ -273,7 +273,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         this._path = null;
         this._isPlaying = false;
         this._fileSaved = true;
-        this.recorderText = '0';
+        this.recorderText = '15:00 seconds';
       });
     } catch (e) {
       print('did not save file');

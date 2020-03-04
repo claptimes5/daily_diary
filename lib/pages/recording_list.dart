@@ -20,7 +20,8 @@ class RecordingListState extends State<RecordingList> {
   List<Recording> recordings;
   final DatabaseAccessor da = DatabaseAccessor();
   FlutterSound flutterSound;
-  int recordPlaying;
+  int recordPlaying; // The ID of the record that is playing
+  int recordIndexPlaying; // The index of the record that is playing in the `recordings` list
   bool _filterOpen = false;
   StreamSubscription _playerSubscription;
   List<Map> dateRangeOptions = [
@@ -67,9 +68,49 @@ class RecordingListState extends State<RecordingList> {
   }
 
   void deleteRecording(Recording r) {
-    File(r.path).deleteSync();
+    try {
+      File(r.path).deleteSync();
+    } on FileSystemException catch (e) {
+      print('File did not exist. Will delete from database.');
+      print(e.toString());
+    }
+
 
     da.delete(r.id);
+  }
+
+  void onPlayerStateChanged() {
+    _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
+      if (e != null) {
+        if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
+          setState(() {
+            if (recordIndexPlaying < recordings.length - 1) {
+              recordIndexPlaying++;
+            } else {
+              recordIndexPlaying = null;
+            }
+
+          });
+
+          if (recordIndexPlaying != null) {
+            startPlayer(recordings[recordIndexPlaying],
+                onPlayerStateChangedCallback: onPlayerStateChanged);
+          } else {
+            stopPlayer();
+          }
+        }
+      }
+    });
+  }
+
+  void togglePlayAll() {
+    //TODO: resume from stopped playback
+    if (recordIndexPlaying == null){
+      recordIndexPlaying = 0;
+      startPlayer(recordings[recordIndexPlaying], onPlayerStateChangedCallback: onPlayerStateChanged);
+    } else {
+       // TODO: store last played so we can show it in grey or light green
+    }
   }
 
   Widget filterBar() {
@@ -80,6 +121,10 @@ class RecordingListState extends State<RecordingList> {
           padding: EdgeInsets.only(left: 10.0, right: 5.0),
           child: Row(children: [
             Expanded(child: Text(filterText)),
+            IconButton(
+              icon: Icon((recordIndexPlaying == null ? Icons.play_circle_outline : Icons.stop)),
+              onPressed: togglePlayAll,
+            ),
             IconButton(
               icon: Icon(Icons.filter_list),
               onPressed: () {
@@ -199,7 +244,7 @@ class RecordingListState extends State<RecordingList> {
     startPlayer(recording);
   }
 
-  void startPlayer(recording) async {
+  void startPlayer(recording, {Function onPlayerStateChangedCallback}) async {
     String path = recording.path;
     print('startPlayer called');
     print('playing status: ${flutterSound.audioState}');
@@ -216,15 +261,19 @@ class RecordingListState extends State<RecordingList> {
       print('startPlayer: $path');
       await flutterSound.setVolume(1.0);
 
-      _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
-        if (e != null) {
-          if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
-            setState(() {
-              recordPlaying = null;
-            });
+      if (onPlayerStateChangedCallback != null) {
+        onPlayerStateChangedCallback();
+      } else {
+        _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
+          if (e != null) {
+            if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
+              setState(() {
+                recordPlaying = null;
+              });
+            }
           }
-        }
-      });
+        });
+      }
 
       setState(() {
         recordPlaying = recording.id;
