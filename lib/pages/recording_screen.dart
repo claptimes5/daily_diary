@@ -369,7 +369,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
               IconButton(
                   icon: (_isPlaying
                       ? Icon(Icons.stop, size: 70)
-                      : Icon(Icons.play_arrow, size: 70)),
+                      : Icon(Icons.play_arrow, size: 70, color: (onpressed != null ? Colors.green : Colors.grey))),
                   onPressed: onpressed,
                   iconSize: 70),
             ])));
@@ -383,11 +383,16 @@ class _RecordingScreenState extends State<RecordingScreen> {
       onpressed = saveRecording;
     }
 
-    return Container(
+    return RaisedButton(
+        onPressed: onpressed,
 //      padding: const EdgeInsets.all(32),
-        child: IconButton(
-            icon: Icon(Icons.save, size: 70),
-            onPressed: onpressed,
-            iconSize: 70));
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.save, size: 30),
+            Text('Save', style: TextStyle(fontSize: 30.0),)
+          ],
+        )
+      );
   }
 }
