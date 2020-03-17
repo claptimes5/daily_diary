@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
@@ -25,10 +26,10 @@ class RecordingListState extends State<RecordingList> {
   bool _filterOpen = false;
   StreamSubscription _playerSubscription;
   List<Map> dateRangeOptions = [
-    {'name': '1 week', 'value': '1_week'},
-    {'name': '1 month', 'value': '1_month'},
-    {'name': '1 year', 'value': '1_year'},
-    {'name': 'All', 'value': 'all'}
+    {'name': 'Past week', 'value': '1_week'},
+    {'name': 'Past month', 'value': '1_month'},
+    {'name': 'Past year', 'value': '1_year'},
+    {'name': 'All time', 'value': 'all'}
   ];
   String _filterOption = 'all';
 
@@ -46,7 +47,6 @@ class RecordingListState extends State<RecordingList> {
       future: getRecordings(),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          //print('project snapshot data is: ${projectSnap.data}');
           return Container(child: Text('No Recordings Yet'));
         } else if (snapshot.hasError) {
           return Container(child: Text('Error getting data'));
@@ -139,7 +139,8 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Widget filterBar() {
-    String filterText = 'Display: ${_filterOption}';
+    Map option = dateRangeOptions.firstWhere((option) => option['value'] == _filterOption);
+    String filterText = 'Display: ${option['name']}';
 
     List<Widget> filterBarContents = [
       Container(
@@ -355,20 +356,17 @@ class RecordingListState extends State<RecordingList> {
     switch (_filterOption) {
       case '1_week':
         {
-          print(_filterOption);
           startTime = now.subtract(Duration(days: 7));
         }
         break;
       case '1_month':
         {
-          print(_filterOption);
           startTime = now.subtract(Duration(days: 31));
         }
         break;
 
       case '1_year':
         {
-          print(_filterOption);
           startTime = now.subtract(Duration(days: 365));
         }
         break;
