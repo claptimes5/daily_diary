@@ -317,6 +317,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Widget recordSection() {
     Widget statusText;
+    Widget recordingButton;
+
     if (_fileSaved) {
       statusText = Text('Saved');
     } else if (_isRecording) {
@@ -325,14 +327,20 @@ class _RecordingScreenState extends State<RecordingScreen> {
       statusText = Text('Ready to record');
     }
 
+    if (_isRecording) {
+      recordingButton = Icon(Icons.stop, color: Colors.black, size: 140);
+    } else if (_path != null) {
+      recordingButton = Icon(Icons.undo, color: Colors.black, size: 140);
+    } else {
+      recordingButton = Icon(Icons.fiber_manual_record,
+          color: Colors.red, size: 140);
+    }
+
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(children: [
           IconButton(
-            icon: (_isRecording
-                ? Icon(Icons.stop, color: Colors.black, size: 140)
-                : Icon(Icons.fiber_manual_record,
-                    color: Colors.red, size: 140)),
+            icon: recordingButton,
             onPressed: _toggleRecording,
             iconSize: 140,
           ),
