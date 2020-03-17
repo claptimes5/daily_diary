@@ -103,14 +103,39 @@ class RecordingListState extends State<RecordingList> {
     });
   }
 
-  void togglePlayAll() {
-    //TODO: resume from stopped playback
-    if (recordIndexPlaying == null){
-      recordIndexPlaying = 0;
-      startPlayer(recordings[recordIndexPlaying], onPlayerStateChangedCallback: onPlayerStateChanged);
+  void resetPlayAll() {
+      stopPlayer();
+      setState(() {
+        recordIndexPlaying = null;
+      });
+
+  }
+
+  void togglePlayAll() async {
+    if (isPlayAllPlaying()) {
+      await flutterSound.pausePlayer();
+      setState(() {});
+    } else if (isPlayAllPaused()) {
+      await flutterSound.resumePlayer();
+      setState(() {});
     } else {
-       // TODO: store last played so we can show it in grey or light green
+      setState(() {
+        recordIndexPlaying = 0;
+      });
+      startPlayer(recordings[recordIndexPlaying], onPlayerStateChangedCallback: onPlayerStateChanged);
     }
+  }
+
+  bool isPlayAllPaused() {
+    return recordIndexPlaying != null && flutterSound.audioState == t_AUDIO_STATE.IS_PAUSED;
+  }
+
+  bool isPlayerStopped() {
+    return flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED;
+  }
+
+  bool isPlayAllPlaying() {
+    return recordIndexPlaying != null && flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING;
   }
 
   Widget filterBar() {
@@ -121,10 +146,6 @@ class RecordingListState extends State<RecordingList> {
           padding: EdgeInsets.only(left: 10.0, right: 5.0),
           child: Row(children: [
             Expanded(child: Text(filterText)),
-            IconButton(
-              icon: Icon((recordIndexPlaying == null ? Icons.play_circle_outline : Icons.stop)),
-              onPressed: togglePlayAll,
-            ),
             IconButton(
               icon: Icon(Icons.filter_list),
               onPressed: () {
@@ -233,7 +254,26 @@ class RecordingListState extends State<RecordingList> {
   @override
   Widget build(BuildContext context) {
     return Column(
-        children: [filterBar(), Expanded(child: recordingListView())]);
+        children: [filterBar(), Expanded(child: recordingListView()), playerSection()]);
+  }
+
+  Widget playerSection() {
+    return Container(
+      color: Colors.grey,
+      child: Row(children: [
+        Text('test'),
+        IconButton(
+          icon: Icon(Icons.stop),
+          onPressed: resetPlayAll,
+        ),
+        Expanded(child: IconButton(
+          icon: Icon(
+              (isPlayAllPaused() || isPlayerStopped() ? Icons.play_circle_outline : Icons
+                  .pause_circle_filled)),
+          onPressed: togglePlayAll,
+        )),
+      ]),
+      padding: EdgeInsets.all(25.0),);
   }
 
   Future<bool> fileExists(String path) async {
@@ -289,7 +329,7 @@ class RecordingListState extends State<RecordingList> {
     print('stopPlayer called');
     print('playing status: ${flutterSound.audioState}');
     try {
-      if (flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING) {
+      if (flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING || flutterSound.audioState == t_AUDIO_STATE.IS_PAUSED) {
         String result = await flutterSound.stopPlayer();
         print('stopPlayer: $result');
       }
