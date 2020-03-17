@@ -147,6 +147,7 @@ class RecordingListState extends State<RecordingList> {
           padding: EdgeInsets.only(left: 10.0, right: 5.0),
           child: Row(children: [
             Expanded(child: Text(filterText)),
+            Text('${recordings.length} recordings'),
             IconButton(
               icon: Icon(Icons.filter_list),
               onPressed: () {
