@@ -261,20 +261,33 @@ class RecordingListState extends State<RecordingList> {
   Widget playerSection() {
     return Container(
       color: Colors.grey,
-      child: Row(children: [
-        Text('test'),
-        IconButton(
-          icon: Icon(Icons.stop),
-          onPressed: resetPlayAll,
-        ),
-        Expanded(child: IconButton(
-          icon: Icon(
-              (isPlayAllPaused() || isPlayerStopped() ? Icons.play_circle_outline : Icons
-                  .pause_circle_filled)),
-          onPressed: togglePlayAll,
-        )),
+      child: Column(children: [
+        Text(playingText()),
+        Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+          IconButton(
+            icon: Icon(Icons.stop),
+            onPressed: resetPlayAll,
+          ),
+          IconButton(
+            icon: Icon(
+                (isPlayAllPaused() || isPlayerStopped() ? Icons.play_circle_outline : Icons
+                    .pause_circle_filled)),
+            onPressed: togglePlayAll,
+          ),
+        ],)
+
       ]),
       padding: EdgeInsets.all(25.0),);
+  }
+
+  String playingText() {
+    if (isPlayAllPlaying() || isPlayAllPaused()) {
+      return "Playing ${recordIndexPlaying + 1} of ${recordings.length}";
+    } else {
+      return 'Play all - stopped';
+    }
   }
 
   Future<bool> fileExists(String path) async {
