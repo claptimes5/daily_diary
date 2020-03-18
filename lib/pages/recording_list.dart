@@ -18,7 +18,7 @@ class RecordingList extends StatefulWidget {
 }
 
 class RecordingListState extends State<RecordingList> {
-  List<Recording> recordings;
+  List<Recording> recordings = [];
   final DatabaseAccessor da = DatabaseAccessor();
   FlutterSound flutterSound;
   int recordPlaying; // The ID of the record that is playing
@@ -231,13 +231,14 @@ class RecordingListState extends State<RecordingList> {
                 ),
               ],
             ),
-            subtitle: new Container(
-              padding: const EdgeInsets.only(top: 5.0),
-              child: new Text(
-                'Washington, D.C.',
-                style: new TextStyle(color: textColor, fontSize: 15.0),
-              ),
-            ),
+// TODO: Add location
+//            subtitle: new Container(
+//              padding: const EdgeInsets.only(top: 5.0),
+//              child: new Text(
+//                'Washington, D.C.',
+//                style: new TextStyle(color: textColor, fontSize: 15.0),
+//              ),
+//            ),
           )
       )
         ],
