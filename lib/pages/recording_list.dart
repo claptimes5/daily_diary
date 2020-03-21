@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_share/flutter_share.dart';
 
 class RecordingList extends StatefulWidget {
   @override
@@ -210,25 +211,31 @@ class RecordingListState extends State<RecordingList> {
       Container(
         color: backgroundColor,
             child: ListTile(
-            trailing: IconButton(
-              icon: (item.id == recordPlaying
-                  ? Icon(Icons.stop)
-                  : Icon(Icons.play_circle_filled)),
-              onPressed: () {
-                if (item.id == recordPlaying) {
-                  stopPlayer();
-                } else {
-                  playRecording(item);
-                }
-              },
-            ),
+              trailing: IconButton(
+                  icon: (item.id == recordPlaying
+                      ? Icon(Icons.stop)
+                      : Icon(Icons.play_circle_filled)),
+                  onPressed: () {
+                    if (item.id == recordPlaying) {
+                      stopPlayer();
+                    } else {
+                      playRecording(item);
+                    }
+                  },
+                ),
             title: new Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                new Text(
+                Text(
                   formatter.format(item.time),
                   style: new TextStyle(color: textColor, fontSize: 14.0),
                 ),
+                IconButton(
+                  icon: Icon(Icons.share),
+                  onPressed: () {
+                    shareFile(item.path);
+                  },
+                )
               ],
             ),
 // TODO: Add location
@@ -391,5 +398,14 @@ class RecordingListState extends State<RecordingList> {
     }
 
     return da.recordings(startTime: startTime, endTime: endTime);
+  }
+
+  Future<void> shareFile(path) async {
+
+    await FlutterShare.shareFile(
+      title: 'Share recording',
+//      text: 'Example share text',
+      filePath: path,
+    );
   }
 }
