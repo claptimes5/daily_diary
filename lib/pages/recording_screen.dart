@@ -9,6 +9,7 @@ import 'package:diary_app/database_accessor.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/scheduler.dart';
+import 'dart:io' show Platform;
 
 class RecordingScreen extends StatefulWidget {
   @override
@@ -130,6 +131,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
     try {
       String path = await flutterSound.startRecorder(
         codec: t_CODEC.CODEC_AAC,
+        sampleRate: 48000,
+        bitRate: 128000,
+        numChannels: 1,
       );
       print('startRecorder: $path');
 
@@ -246,14 +250,20 @@ class _RecordingScreenState extends State<RecordingScreen> {
     try {
       //TODO: make on subdirectory per month
       final tmpRecording = File(this._path);
+      Directory appDocDir;
 
       // Create directory for files
-      Directory appDocDir = await getApplicationDocumentsDirectory();
+      if (Platform.isAndroid) {
+        appDocDir = await getExternalStorageDirectory();
+      } else {
+        appDocDir = await getApplicationDocumentsDirectory();
+      }
+
       String appDocPath = appDocDir.path;
 
       String fullDirPath = p.join(appDocPath, diaryEntryDir);
 //    String fullDirPath = diaryEntryDir;
-      String fileName = DateTime.now().toIso8601String() + '.acc';
+      String fileName = 'daily_diary_' + DateTime.now().toIso8601String() + '.aac';
       String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
 //    String fullFilePath =
 //        p.join(diaryEntryDir, DateTime.now().toIso8601String());
