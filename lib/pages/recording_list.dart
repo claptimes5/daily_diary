@@ -277,42 +277,42 @@ class RecordingListState extends State<RecordingList> {
     }
 
     return Container(
-      color: Colors.black87,
+      color: Colors.black12,
       child: Column(children: [
         Text(playingText(),
         style: TextStyle(
           fontSize: 18,
-          color: Colors.white
+          color: Colors.black
         )),
         Row(
         mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
           IconButton(
-            icon: Icon(Icons.stop, size: 40,),
+            icon: Icon(Icons.stop, size: 50,),
             onPressed: resetPlayAll,
-            iconSize: 40,
-              color: Colors.white
+            iconSize: 50,
+              color: Colors.black87
           ),
             IconButton(
               icon: Icon(
                   (isPlayAllPaused() || isPlayerStopped() ? Icons
                       .play_circle_outline : Icons
-                      .pause_circle_filled), size: 30,
+                      .pause_circle_filled), size: 40,
                   color: playPauseColor),
               onPressed: togglePlayAll,
-            iconSize: 30,
+            iconSize: 40,
           ),
         ],)
 
       ]),
-      padding: EdgeInsets.all(25.0),);
+      padding: EdgeInsets.all(10.0),);
   }
 
   String playingText() {
     if (isPlayAllPlaying() || isPlayAllPaused()) {
       return "Playing ${recordIndexPlaying + 1} of ${recordings.length}";
     } else {
-      return 'Play all - stopped';
+      return 'Play all: stopped';
     }
   }
 
