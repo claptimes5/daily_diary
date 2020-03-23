@@ -268,22 +268,39 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Widget playerSection() {
+    Color playPauseColor;
+
+    if (isPlayAllPaused() || isPlayerStopped()) {
+      playPauseColor = Colors.green;
+    } else {
+      playPauseColor = Colors.red;
+    }
+
     return Container(
-      color: Colors.grey,
+      color: Colors.black87,
       child: Column(children: [
-        Text(playingText()),
+        Text(playingText(),
+        style: TextStyle(
+          fontSize: 18,
+          color: Colors.white
+        )),
         Row(
         mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
           IconButton(
-            icon: Icon(Icons.stop),
+            icon: Icon(Icons.stop, size: 40,),
             onPressed: resetPlayAll,
+            iconSize: 40,
+              color: Colors.white
           ),
-          IconButton(
-            icon: Icon(
-                (isPlayAllPaused() || isPlayerStopped() ? Icons.play_circle_outline : Icons
-                    .pause_circle_filled)),
-            onPressed: togglePlayAll,
+            IconButton(
+              icon: Icon(
+                  (isPlayAllPaused() || isPlayerStopped() ? Icons
+                      .play_circle_outline : Icons
+                      .pause_circle_filled), size: 30,
+                  color: playPauseColor),
+              onPressed: togglePlayAll,
+            iconSize: 30,
           ),
         ],)
 
@@ -322,7 +339,7 @@ class RecordingListState extends State<RecordingList> {
       }
 
       print('startPlayer: $path');
-      await flutterSound.setVolume(1.0);
+      await flutterSound.setVolume(0.4);
 
       if (onPlayerStateChangedCallback != null) {
         onPlayerStateChangedCallback();

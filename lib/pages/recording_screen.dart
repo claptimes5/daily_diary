@@ -199,7 +199,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         return;
       }
       print('startPlayer: $path');
-      await flutterSound.setVolume(1.0);
+      await flutterSound.setVolume(0.4);
 
       _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
         if (e != null) {
@@ -300,6 +300,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
     return Container(
         padding: const EdgeInsets.all(32),
         child: Column(
+//          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             titleSection(),
             recordSection(),
@@ -314,15 +316,53 @@ class _RecordingScreenState extends State<RecordingScreen> {
     return '${d.month}/${d.day}/${d.year}';
   }
 
+  // Indicates whether the audio journal for today has been completed
+  Future<bool> isEntryComplete() async {
+    DateTime endTime = DateTime.now();
+    DateTime startTime = DateTime(endTime.year,
+        endTime.month,
+        endTime.day);
+    final DatabaseAccessor da = DatabaseAccessor();
+
+    List<Recording> recordings = await da.recordings(startTime: startTime, endTime: endTime);
+
+    return recordings.length == 1;
+  }
+
   Widget titleSection() {
-    return Container(
-        padding: const EdgeInsets.all(4),
-        child: Text(
-          'Record for today ${currentDate()}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ));
+    String recordCompleteText = 'Incomplete';
+    Color recordCompleteColor = Colors.redAccent;
+
+    return FutureBuilder(
+      future: isEntryComplete(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
+          recordCompleteText = 'Complete';
+          recordCompleteColor = Colors.lightGreen;
+        }
+
+        return Container(
+            padding: const EdgeInsets.all(4),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children:
+                [
+                  Text(
+                      'Journal Entry for ${currentDate()}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22
+                      )),
+                  Text(recordCompleteText,
+                      style: TextStyle(
+                          color: recordCompleteColor,
+//                  fontWeight: FontWeight.bold,
+                          fontSize: 20
+                      ))
+                ])
+        );
+      },
+    );
   }
 
   Widget recordSection() {
@@ -399,7 +439,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.save, size: 30),
             Text('Save', style: TextStyle(fontSize: 30.0),)
           ],
         )
