@@ -79,9 +79,9 @@ packages:
   flutter_share:
     dependency: "direct main"
     description:
-      name: flutter_share
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "../flutter_share"
+      relative: true
+    source: path
     version: "1.0.2+1"
   flutter_sound:
     dependency: "direct main"
