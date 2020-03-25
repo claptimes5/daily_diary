@@ -1,4 +1,4 @@
-package com.avileavitt.diary_app
+package com.taimtechnologies.daily_diary
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
