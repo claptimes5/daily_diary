@@ -199,7 +199,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
         return;
       }
       print('startPlayer: $path');
-      await flutterSound.setVolume(0.4);
 
       _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
         if (e != null) {

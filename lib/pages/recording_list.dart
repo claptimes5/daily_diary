@@ -339,7 +339,6 @@ class RecordingListState extends State<RecordingList> {
       }
 
       print('startPlayer: $path');
-      await flutterSound.setVolume(0.4);
 
       if (onPlayerStateChangedCallback != null) {
         onPlayerStateChangedCallback();
@@ -418,10 +417,8 @@ class RecordingListState extends State<RecordingList> {
   }
 
   Future<void> shareFile(path) async {
-print(path);
     await FlutterShare.shareFile(
       title: 'Share recording',
-      text: 'Share recording',
       filePath: path,
     );
   }
