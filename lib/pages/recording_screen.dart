@@ -30,7 +30,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
   CalendarController _calendarController;
-  Map<DateTime, List> _events;
+  Map<DateTime, List> _events = {};
 
   @override
   Widget build(BuildContext context) {
@@ -56,19 +56,28 @@ class _RecordingScreenState extends State<RecordingScreen> {
     return FutureBuilder(
         future: isEntryComplete(),
         builder: (context, snapshot) {
-          Color todayColor = Colors.red;
+          Color todayColor = Colors.red[300];
 
           // snapshot.data returns true if entry is complete for today
           if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
             todayColor = Colors.green;
           }
 
+          final startingDay = DateTime.now().subtract(Duration(days: 6));
+          final endDay = DateTime.now();
+
+//          print(startingDay.weekday);
+//          print( DateFormat('EEEE').format(startingDay));
+//          print(StartingDayOfWeek.values[startingDay.weekday -1]);
+
           return TableCalendar(
             calendarController: _calendarController,
             events: _events,
 //      holidays: _holidays,
             initialCalendarFormat: CalendarFormat.week,
-            startingDayOfWeek: StartingDayOfWeek.monday,
+            startingDayOfWeek: StartingDayOfWeek.values[startingDay.weekday -1],
+            startDay: startingDay,
+            endDay: endDay,
             calendarStyle: CalendarStyle(
                 selectedColor: Colors.deepOrange[400],
                 todayColor: todayColor,
@@ -93,9 +102,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 //          borderRadius: BorderRadius.circular(16.0),
 //        ),
             ),
-//      onDaySelected: _onDaySelected,
-//      onVisibleDaysChanged: _onVisibleDaysChanged,
-//      onCalendarCreated: _onCalendarCreated,
           );
         }
     );
@@ -338,6 +344,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       da.insertModel(new Recording(time: DateTime.now(), path: fullFilePath));
 
       tmpRecording.deleteSync();
+      populatePreviousRecordings();
       setState(() {
         this._path = null;
         this._isPlaying = false;
@@ -383,15 +390,17 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   // Indicates whether the audio journal for today has been completed
   Future<bool> isEntryComplete() async {
-    DateTime endTime = DateTime.now();
-    DateTime startTime = DateTime(endTime.year,
-        endTime.month,
-        endTime.day);
+    final now = DateTime.now();
+    final tomorrow = now.add(Duration(days: 1));
+    final endTime = DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
+    final startTime = DateTime(now.year,
+        now.month,
+        now.day);
     final DatabaseAccessor da = DatabaseAccessor();
 
     List<Recording> recordings = await da.recordings(startTime: startTime, endTime: endTime);
 
-    return recordings.length == 1;
+    return recordings.length >= 1;
   }
 
   Future<void> populatePreviousRecordings() async {
@@ -415,7 +424,17 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget calendarSection() {
-    return _buildTableCalendar();
+    Map daysCounted = {};
+
+    // Count the number of unique events per day
+    _events.keys.forEach((e) {
+      daysCounted[e.day] = 1;
+    });
+
+    return Column(children: [
+      _buildTableCalendar(),
+      Text('You\'ve recorded ${daysCounted.length} of the last 7 days', style: TextStyle(color: Colors.black54),)
+    ]);
   }
 
   Widget titleSection() {
@@ -437,7 +456,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 children:
                 [
                   Text(
-                      'Journal Entry: ',
+                      '${DateFormat('EEEE').format(DateTime.now())}\'s Entry: ',
                       style: TextStyle(
 //                          fontWeight: FontWeight.bold,
                           fontSize: 22
