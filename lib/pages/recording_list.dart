@@ -201,7 +201,7 @@ class RecordingListState extends State<RecordingList> {
 
         // Show a snackbar. This snackbar could also contain "Undo" actions.
         Scaffold.of(context)
-            .showSnackBar(SnackBar(content: Text("$id dismissed")));
+            .showSnackBar(SnackBar(content: Text("Recording was deleted")));
       },
       child: new Column(
         children: <Widget>[
