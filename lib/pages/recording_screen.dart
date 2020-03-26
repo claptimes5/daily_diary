@@ -11,6 +11,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/scheduler.dart';
 import 'dart:io' show Platform;
 import 'package:table_calendar/table_calendar.dart';
+import 'package:diary_app/ui/alert_dialog.dart';
 
 class RecordingScreen extends StatefulWidget {
   @override
@@ -107,33 +108,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Future<void> alertDialog(String title, String text, String buttonText) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(text),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text(buttonText),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   void requestPermissions() async {
     Map<PermissionGroup, PermissionStatus> permissions =
         await PermissionHandler().requestPermissions(
@@ -150,7 +124,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
     if (permissionStorage.value != permissionGranted.value ||
         permissionMicrophone.value != permissionGranted.value) {
-      alertDialog('Microphone and Storage permissions required',
+      AlertDialogBox().show(context,'Microphone and Storage permissions required',
           'Please grant permissions so your voice can be recorded.', 'OK');
       requestPermissions();
 
@@ -354,7 +328,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     } catch (e) {
       print('did not save file');
       print(e.toString());
-      alertDialog('Save Failed', 'Please try again', 'OK');
+      AlertDialogBox().show(context,'Save Failed', 'Please try again', 'OK');
     }
   }
 
