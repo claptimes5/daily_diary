@@ -74,8 +74,15 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 todayColor: todayColor,
                 markersColor: Colors.green[700],
                 outsideDaysVisible: false,
-                highlightSelected: false
+                highlightSelected: false,
+                weekendStyle: null,
+                outsideWeekendStyle: null,
             ),
+            headerVisible: false,
+            availableGestures: AvailableGestures.none,
+            daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: TextStyle(color: const Color(0xFF616161)),
+                weekendStyle: TextStyle(color: const Color(0xFF616161))),
             headerStyle: HeaderStyle(
               centerHeaderTitle: true,
               formatButtonVisible: false,
@@ -360,8 +367,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 //          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            calendarSection(),
             titleSection(),
+            calendarSection(),
             recordSection(),
             playSection(),
             saveSection()
@@ -424,15 +431,15 @@ class _RecordingScreenState extends State<RecordingScreen> {
         }
 
         return Container(
-            padding: const EdgeInsets.all(4),
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            padding: const EdgeInsets.all(2),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children:
                 [
                   Text(
-                      'Journal Entry for ${currentDate()}',
+                      'Journal Entry: ',
                       style: TextStyle(
-                          fontWeight: FontWeight.bold,
+//                          fontWeight: FontWeight.bold,
                           fontSize: 22
                       )),
                   Text(recordCompleteText,
