@@ -10,6 +10,7 @@ import 'package:diary_app/models/recording.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/scheduler.dart';
 import 'dart:io' show Platform;
+import 'package:table_calendar/table_calendar.dart';
 
 class RecordingScreen extends StatefulWidget {
   @override
@@ -28,6 +29,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
   String playerText = '15';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
+  CalendarController _calendarController;
+  Map<DateTime, List> _events;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,54 @@ class _RecordingScreenState extends State<RecordingScreen> {
     flutterSound.setSubscriptionDuration(0.01);
     flutterSound.setDbPeakLevelUpdate(0.8);
     flutterSound.setDbLevelEnabled(true);
-//    initializeDateFormatting();
+
+    final _selectedDay = DateTime.now();
+
+    populatePreviousRecordings();
+
+    _calendarController = CalendarController();
+  }
+
+  Widget _buildTableCalendar() {
+    return FutureBuilder(
+        future: isEntryComplete(),
+        builder: (context, snapshot) {
+          Color todayColor = Colors.red;
+
+          // snapshot.data returns true if entry is complete for today
+          if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
+            todayColor = Colors.green;
+          }
+
+          return TableCalendar(
+            calendarController: _calendarController,
+            events: _events,
+//      holidays: _holidays,
+            initialCalendarFormat: CalendarFormat.week,
+            startingDayOfWeek: StartingDayOfWeek.monday,
+            calendarStyle: CalendarStyle(
+                selectedColor: Colors.deepOrange[400],
+                todayColor: todayColor,
+                markersColor: Colors.green[700],
+                outsideDaysVisible: false,
+                highlightSelected: false
+            ),
+            headerStyle: HeaderStyle(
+              centerHeaderTitle: true,
+              formatButtonVisible: false,
+              headerPadding: EdgeInsets.symmetric(vertical: 2.0),
+//        formatButtonTextStyle: TextStyle().copyWith(color: Colors.white, fontSize: 15.0),
+//        formatButtonDecoration: BoxDecoration(
+//          color: Colors.deepOrange[400],
+//          borderRadius: BorderRadius.circular(16.0),
+//        ),
+            ),
+//      onDaySelected: _onDaySelected,
+//      onVisibleDaysChanged: _onVisibleDaysChanged,
+//      onCalendarCreated: _onCalendarCreated,
+          );
+        }
+    );
   }
 
   Future<void> alertDialog(String title, String text, String buttonText) async {
@@ -105,6 +155,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
     flutterSound.stopRecorder().catchError((e, trace) {
       print('Stop recorder failed because it was not running');
     }, test: (e) => e is RecorderStoppedException);
+
+    _calendarController.dispose();
+
     super.dispose();
   }
 
@@ -297,11 +350,17 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Widget _buildPage() {
     return Container(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.only(
+          left: 0.0,
+          top: 0.0,
+          right: 0.0,
+          bottom: 10.0,
+        ),
         child: Column(
 //          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
+            calendarSection(),
             titleSection(),
             recordSection(),
             playSection(),
@@ -326,6 +385,30 @@ class _RecordingScreenState extends State<RecordingScreen> {
     List<Recording> recordings = await da.recordings(startTime: startTime, endTime: endTime);
 
     return recordings.length == 1;
+  }
+
+  Future<void> populatePreviousRecordings() async {
+    DateTime endTime = DateTime.now();
+    DateTime startTime = DateTime(endTime.year,
+        endTime.month,
+        endTime.day).subtract(Duration(days: 7));
+    final DatabaseAccessor da = DatabaseAccessor();
+
+    List<Recording> recordings = await da.recordings(startTime: startTime, endTime: endTime);
+
+    Map<DateTime, List> events = {};
+
+    recordings.forEach((r) {
+      events[r.time] = ['true'];
+    });
+
+    setState(() {
+      _events = events;
+    });
+  }
+
+  Widget calendarSection() {
+    return _buildTableCalendar();
   }
 
   Widget titleSection() {

@@ -40,7 +40,7 @@ class RecordingListState extends State<RecordingList> {
     flutterSound.setSubscriptionDuration(0.01);
     flutterSound.setDbPeakLevelUpdate(0.8);
     flutterSound.setDbLevelEnabled(true);
-    initializeDateFormatting();
+//    initializeDateFormatting();
   }
 
   Widget recordingListView() {

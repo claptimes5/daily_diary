@@ -5,8 +5,11 @@
 import 'package:flutter/material.dart';
 import 'diary_app_home.dart';
 import 'database_accessor.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  initializeDateFormatting().then((_) => runApp(MyApp()));
+}
 
 class MyApp extends StatelessWidget {
 
