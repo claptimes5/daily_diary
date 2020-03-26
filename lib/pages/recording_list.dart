@@ -178,6 +178,39 @@ class RecordingListState extends State<RecordingList> {
     return Column(children: filterBarContents);
   }
 
+  Future<bool> confirmDeletion() async {
+    return showDialog <bool>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Are you sure?"),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text('Please confirm deletion.'),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text('Cancel'),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              FlatButton(
+                child: Text('Confirm'),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          );
+        }
+    );
+  }
+
   Widget listItem(item, index) {
     final formatter = new DateFormat('MMMM dd, yyyy - h:mm a');
     Color backgroundColor;
@@ -189,8 +222,10 @@ class RecordingListState extends State<RecordingList> {
     return Dismissible(
       background: Container(color: Colors.red),
       key: Key(item.id.toString()),
+      confirmDismiss: (direction) async {
+        return confirmDeletion();
+      },
       onDismissed: (direction) {
-        int id = item.id;
         setState(() {
           deleteRecording(item);
 
@@ -201,7 +236,8 @@ class RecordingListState extends State<RecordingList> {
 
         // Show a snackbar. This snackbar could also contain "Undo" actions.
         Scaffold.of(context)
-            .showSnackBar(SnackBar(content: Text("Recording was deleted")));
+            .showSnackBar(
+            SnackBar(content: Text("Recording was deleted")));
       },
       child: new Column(
         children: <Widget>[
