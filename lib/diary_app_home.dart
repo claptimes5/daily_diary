@@ -23,15 +23,17 @@ class DiaryAppHomeState extends State<DiaryAppHome>
     return Scaffold(
       appBar: AppBar(
         title: Text("Daily Diary"),
-        elevation: 0.7,
+        elevation: 1.0,
         bottom: TabBar(
           controller: tabController,
           indicatorColor: Colors.white,
           tabs: <Widget>[
-            Tab(text: "Record New"),
-            Tab(
-              text: "List Recordings",
-            ),
+            Tab(child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Icon(Icons.add), Text("New Journal Entry")] ,)),
+            Tab(child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Icon(Icons.play_circle_filled), Text("Listen to Entires"), ] ,)),
           ],
         ),
 //        actions: <Widget>[

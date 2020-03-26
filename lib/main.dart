@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     da.createRecordingsTable();
 
     return MaterialApp(
-      title: 'Startup Name Generator',
+      title: 'Daily Diary',
       theme: ThemeData(
         // Add the 3 lines from here...
         primaryColor: Colors.white,
