@@ -424,7 +424,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         }
 
         return Container(
-            padding: const EdgeInsets.all(2),
+            padding: const EdgeInsets.all(10),
             child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children:
@@ -460,21 +460,22 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
 
     if (_isRecording) {
-      recordingButton = Icon(Icons.stop, color: Colors.black, size: 140);
+      recordingButton = Icon(Icons.stop, color: Colors.black, size: 120);
     } else if (_path != null) {
-      recordingButton = Icon(Icons.undo, color: Colors.black, size: 140);
+      recordingButton = Icon(Icons.undo, color: Colors.black, size: 120);
     } else {
       recordingButton = Icon(Icons.fiber_manual_record,
-          color: Colors.red, size: 140);
+          color: Colors.red, size: 120);
     }
 
-    return Container(
-        padding: const EdgeInsets.all(32),
-        child: Column(children: [
+    return Expanded(child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+        children: [
           IconButton(
             icon: recordingButton,
             onPressed: _toggleRecording,
-            iconSize: 140,
+            padding: EdgeInsets.all(4.0),
+            iconSize: 120,
           ),
           Text(recorderText),
           statusText,
@@ -491,11 +492,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
       onpressed = startPlayer;
     }
 
-    return Container(
-        padding: const EdgeInsets.all(32),
-        child: Center(
-            child: Row(
-                mainAxisSize: MainAxisSize.min,
+    return Expanded(child: Container(
+//        padding: const EdgeInsets.all(32),
+        child:  Row(
+//                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
               IconButton(
