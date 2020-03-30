@@ -10,6 +10,8 @@ import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_share/flutter_share.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 
 class RecordingList extends StatefulWidget {
   @override
@@ -362,19 +364,29 @@ class RecordingListState extends State<RecordingList> {
 
   void startPlayer(recording, {Function onPlayerStateChangedCallback}) async {
     String path = recording.path;
+    Directory appDocDir;
     print('startPlayer called');
     print('playing status: ${flutterSound.audioState}');
     try {
       print('stopping player');
       await stopPlayer();
 
-      print('playing file');
-      print(path);
+      // Versions of the app > 0.1.1 use relative path to store files. This determines if
+      // a relative path was used and prepends the appropriate path prefix.
+      if (!path.startsWith('/')) {
+        if (Platform.isAndroid) {
+          appDocDir = await getExternalStorageDirectory();
+        } else {
+          appDocDir = await getApplicationDocumentsDirectory();
+        }
+
+        path = p.join(appDocDir.path, path);;
+      }
+
+      print('playing file $path');
       if (await fileExists(path)) {
         path = await flutterSound.startPlayer(path);
       }
-
-      print('startPlayer: $path');
 
       if (onPlayerStateChangedCallback != null) {
         onPlayerStateChangedCallback();
