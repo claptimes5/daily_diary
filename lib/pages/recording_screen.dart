@@ -301,24 +301,25 @@ class _RecordingScreenState extends State<RecordingScreen> {
       String appDocPath = appDocDir.path;
 
       String fullDirPath = p.join(appDocPath, diaryEntryDir);
-//    String fullDirPath = diaryEntryDir;
       String fileName = 'daily_diary_' + DateTime.now().toIso8601String() + '.aac';
+      String relativeFilePath = p.join(diaryEntryDir, fileName);;
       String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
-//    String fullFilePath =
-//        p.join(diaryEntryDir, DateTime.now().toIso8601String());
 
-      Directory dir = await Directory(fullDirPath).create(recursive: true);
-      final exists = await dir.exists();
+      if (!(await Directory(fullDirPath).exists())) {
+        await Directory(fullDirPath).create(recursive: true);
+      }
 
       // Copy temp file to new directory
-
-      final file = await tmpRecording.copy(fullFilePath);
+      await tmpRecording.copy(fullFilePath);
 
       final DatabaseAccessor da = DatabaseAccessor();
-      da.insertModel(new Recording(time: DateTime.now(), path: fullFilePath));
+      da.insertModel(new Recording(time: DateTime.now(), path: relativeFilePath));
 
       tmpRecording.deleteSync();
+
+      // Retrieve previous recordings so they can be displayed in the calendar widget
       populatePreviousRecordings();
+
       setState(() {
         this._path = null;
         this._isPlaying = false;
