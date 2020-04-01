@@ -373,15 +373,20 @@ class RecordingListState extends State<RecordingList> {
 
       // Versions of the app > 0.1.1 use relative path to store files. This determines if
       // a relative path was used and prepends the appropriate path prefix.
-      if (!path.startsWith('/')) {
-        if (Platform.isAndroid) {
-          appDocDir = await getExternalStorageDirectory();
-        } else {
-          appDocDir = await getApplicationDocumentsDirectory();
-        }
-
-        path = p.join(appDocDir.path, path);;
+      if (path.startsWith('/')) {
+        // Split the absolute path and the prepend the file name with the diary entries directory
+        // to construct the appropriate relative path
+        path = path.split('/').last;
+        path = p.join('diary_entries', path);
       }
+
+      if (Platform.isAndroid) {
+        appDocDir = await getExternalStorageDirectory();
+      } else {
+        appDocDir = await getApplicationDocumentsDirectory();
+      }
+
+      path = p.join(appDocDir.path, path);;
 
       print('playing file $path');
       if (await fileExists(path)) {
