@@ -1,4 +1,5 @@
 import 'package:diary_app/ui/common_switch.dart';
+import 'package:diary_app/ui/input_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -9,7 +10,7 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsState extends State<SettingsScreen> {
   int recordingLength;
-  Time notificationTime;
+  TimeOfDay notificationTime = TimeOfDay.now();
   bool displayNotifications = false;
   final _formKey = GlobalKey<FormState>();
 
@@ -73,7 +74,13 @@ class _SettingsState extends State<SettingsScreen> {
                     color: disabledSettingsColor(displayNotifications, Colors.grey),
                   ),
                   title: Text("Notification Time", style: TextStyle(color: disabledSettingsColor(displayNotifications, Colors.black))),
-                  trailing: Icon(Icons.arrow_right),
+                  trailing: InkWell(
+                    child: Text(notificationTime.format(context), style: TextStyle(color: disabledSettingsColor(displayNotifications, Colors.black))),
+//                    valueStyle: valueStyle,
+                    onTap: (displayNotifications ? () {
+                      _selectTime(context);
+                    } : null),
+                  ),
                 )
               ],
             ),
@@ -84,6 +91,16 @@ class _SettingsState extends State<SettingsScreen> {
 
   Color disabledSettingsColor(bool isActive, Color defaultColor) {
     return (isActive ? defaultColor : Colors.black26);
+  }
+
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay picked =
+    await showTimePicker(context: context, initialTime: notificationTime);
+    if (picked != null && picked != notificationTime) {
+     setState(() {
+       notificationTime = picked;
+     });
+    }
   }
 
   Widget _formSection() {
