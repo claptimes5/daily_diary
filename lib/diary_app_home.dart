@@ -1,3 +1,4 @@
+import 'package:diary_app/pages/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:diary_app/pages/recording_list.dart';
 import 'package:diary_app/pages/recording_screen.dart';
@@ -36,13 +37,19 @@ class DiaryAppHomeState extends State<DiaryAppHome>
               children: [Icon(Icons.play_circle_filled), Text("Listen to Entires"), ] ,)),
           ],
         ),
-//        actions: <Widget>[
+        actions: <Widget>[
 //          Icon(Icons.search),
 //          Padding(
 //            padding: const EdgeInsets.symmetric(horizontal: 5.0),
 //          ),
-//          Icon(Icons.more_vert)
-//        ],
+          IconButton(icon: Icon(Icons.settings),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SettingsScreen()),
+            );
+          },)
+        ],
       ),
       body: TabBarView(
         controller: tabController,
