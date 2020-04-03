@@ -1,6 +1,7 @@
 import 'package:diary_app/ui/common_switch.dart';
 import 'package:diary_app/ui/input_dropdown.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -9,10 +10,30 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsState extends State<SettingsScreen> {
-  int recordingLength;
+  int recordingLength = 15;
+  TextEditingController _recordingLengthEditingController = TextEditingController();
   TimeOfDay notificationTime = TimeOfDay.now();
   bool displayNotifications = false;
+  final recordingLengthKey = 'recording_lehgth';
   final _formKey = GlobalKey<FormState>();
+
+  void initState() {
+    super.initState();
+    _recordingLengthEditingController.value = TextEditingValue(text: recordingLength.toString());
+//    _recordingLengthEditingController.addListener(() {
+//      final newText = _recordingLengthEditingController.text;
+//      _recordingLengthEditingController.value = _recordingLengthEditingController.value.copyWith(
+//        text: newText,
+//        selection: TextSelection(baseOffset: newText.length, extentOffset: newText.length),
+//        composing: TextRange.empty,
+//      );
+//    });
+  }
+
+  void dispose() {
+    _recordingLengthEditingController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,9 +69,23 @@ class _SettingsState extends State<SettingsScreen> {
                     Icons.music_note,
                     color: Colors.green,
                   ),
-                  title: Text("Recording Length"),
-                  trailing: CommonSwitch(
-                    defValue: true,
+                  title: Text("Recording Length (seconds)"),
+                  trailing: Container(
+                    width: 100,
+                    child: TextField(
+                      maxLength: 3,
+                      textAlign: TextAlign.end,
+                      decoration: InputDecoration(
+                          border: InputBorder.none),
+                      controller: _recordingLengthEditingController,
+                      onSubmitted: (String value) {
+                        saveRecordingLength(value);
+                      },
+                      keyboardType: TextInputType.number,
+                      inputFormatters: <TextInputFormatter>[
+                        WhitelistingTextInputFormatter.digitsOnly
+                      ],
+                    ),
                   ),
                 ),
                 ListTile(
@@ -93,6 +128,14 @@ class _SettingsState extends State<SettingsScreen> {
     return (isActive ? defaultColor : Colors.black26);
   }
 
+  void saveRecordingLength(String value) {
+    saveKey(recordingLengthKey, value);
+  }
+
+  void saveKey(String key, String value) {
+    // TODO
+  }
+
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay picked =
     await showTimePicker(context: context, initialTime: notificationTime);
@@ -101,40 +144,5 @@ class _SettingsState extends State<SettingsScreen> {
        notificationTime = picked;
      });
     }
-  }
-
-  Widget _formSection() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          TextFormField(
-            decoration: const InputDecoration(
-              hintText: 'Enter your email',
-            ),
-            validator: (value) {
-              if (value.isEmpty) {
-                return 'Please enter some text';
-              }
-              return null;
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
-            child: RaisedButton(
-              onPressed: () {
-                // Validate will return true if the form is valid, or false if
-                // the form is invalid.
-                if (_formKey.currentState.validate()) {
-                  // Process data.
-                }
-              },
-              child: Text('Submit'),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
