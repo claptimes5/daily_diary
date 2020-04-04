@@ -1,4 +1,5 @@
 import 'package:diary_app/pages/settings_screen.dart';
+import 'package:diary_app/ui/circle_tab_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:diary_app/pages/recording_list.dart';
 import 'package:diary_app/pages/recording_screen.dart';
@@ -16,7 +17,7 @@ class DiaryAppHomeState extends State<DiaryAppHome>
   void initState() {
     super.initState();
 
-    tabController = TabController(vsync: this, initialIndex: 0, length: 2);
+    tabController = TabController(vsync: this, initialIndex: 0, length: 3);
   }
 
   @override
@@ -26,15 +27,25 @@ class DiaryAppHomeState extends State<DiaryAppHome>
         title: Text("Daily Diary"),
         elevation: 1.0,
         bottom: TabBar(
+          indicator: CircleTabIndicator(color: Colors.blue[100], radius: 3),
           controller: tabController,
           indicatorColor: Colors.white,
           tabs: <Widget>[
             Tab(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.add), Text("New Journal Entry")] ,)),
+              children: [Icon(Icons.add), Text("New Journal Entry")],)),
             Tab(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.play_circle_filled), Text("Listen to Entires"), ] ,)),
+              children: [
+                Icon(Icons.play_circle_filled),
+                Text("Listen to Entires"),
+              ],)),
+            Tab(child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.settings),
+                Text("Settings"),
+              ],)),
           ],
         ),
         actions: <Widget>[
@@ -42,13 +53,18 @@ class DiaryAppHomeState extends State<DiaryAppHome>
 //          Padding(
 //            padding: const EdgeInsets.symmetric(horizontal: 5.0),
 //          ),
-          IconButton(icon: Icon(Icons.settings),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => SettingsScreen()),
-            );
-          },)
+//          IconButton(icon: Icon(Icons.settings),
+//            onPressed: () {
+//              Navigator.push(
+//                context,
+//                MaterialPageRoute(builder: (context) => SettingsScreen()),
+//              ).then((value) {
+//                setState(() {
+////                  _max
+//                });
+//              });
+//            },
+//          )
         ],
       ),
       body: TabBarView(
@@ -56,6 +72,7 @@ class DiaryAppHomeState extends State<DiaryAppHome>
         children: <Widget>[
           RecordingScreen(),
           RecordingList(),
+          SettingsScreen(),
         ],
       ),
     );
