@@ -33,12 +33,12 @@ class DiaryAppHomeState extends State<DiaryAppHome>
           tabs: <Widget>[
             Tab(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.add), Text("New Journal Entry")],)),
+              children: [Icon(Icons.add), Text("Add Entry")],)),
             Tab(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.play_circle_filled),
-                Text("Listen to Entires"),
+                Text("Listen"),
               ],)),
             Tab(child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
