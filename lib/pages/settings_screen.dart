@@ -17,6 +17,8 @@ class _SettingsState extends State<SettingsScreen> {
   TimeOfDay notificationTime = TimeOfDay(hour: 21, minute: 0);
   bool displayNotifications = false;
   final recordingLengthKey = 'recording_lehgth';
+  final displayNotificationsKey = 'display_notifications';
+  final notificationTimeKey = 'notification_time';
   SharedPreferences prefs;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
@@ -44,15 +46,28 @@ class _SettingsState extends State<SettingsScreen> {
   _loadSettingsData() async {
     prefs = await SharedPreferences.getInstance();
 
+    // Load recording length
     int _length = (prefs.getInt(recordingLengthKey) ?? 15);
-
     _recordingLengthEditingController.value = TextEditingValue(text: _length.toString());
 
-//    notificationTime
-//    displayNotifications
+    // Load whether notifications are enabled
+    bool _displayNotifications = (prefs.getBool(displayNotificationsKey) ?? false);
+    String _notificationTimeSetting = prefs.getString(notificationTimeKey);
+
+    // Load notification time
+    TimeOfDay _notificationTime = (_notificationTimeSetting != null && _notificationTimeSetting != '' ? _timeOfDayFromString(_notificationTimeSetting) : TimeOfDay(hour: 21, minute: 0));
+
     setState(() {
 //      recordingLength = _length;
+      displayNotifications = _displayNotifications;
+      notificationTime = _notificationTime;
     });
+  }
+
+  TimeOfDay _timeOfDayFromString(String timeOfDayString) {
+    List<String> splitString = timeOfDayString.split(":");
+
+    return TimeOfDay(hour:int.parse(splitString[0]),minute: int.parse(splitString[1]));
   }
 
   void dispose() {
@@ -149,8 +164,13 @@ class _SettingsState extends State<SettingsScreen> {
       _cancelNotifications();
     }
 
-    setState(() {
-      this.displayNotifications = val;
+    prefs.setBool(displayNotificationsKey, val).then((bool success) {
+      setState(() {
+        this.displayNotifications = val;
+      });
+
+//      _loadSettingsData();
+      return success;
     });
   }
 
@@ -186,12 +206,14 @@ class _SettingsState extends State<SettingsScreen> {
     await showTimePicker(context: context, initialTime: notificationTime);
     if (picked != null && picked != notificationTime) {
 
-      setState(() {
-        notificationTime = picked;
-      });
+      prefs.setString(notificationTimeKey, '${picked.hour}:${picked.minute}').then((bool success) {
+        setState(() {
+          notificationTime = picked;
+        });
 
-      _cancelNotifications();
-      _enableNotifications();
+        _cancelNotifications();
+        _enableNotifications();
+      });
     }
   }
 
@@ -218,8 +240,6 @@ class _SettingsState extends State<SettingsScreen> {
     IOSNotificationDetails();
     var platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    print(notificationTime);
-    print(Time(notificationTime.hour, notificationTime.minute).toMap().toString());
     await flutterLocalNotificationsPlugin.showDailyAtTime(
         0,
         'Daily reminder',
