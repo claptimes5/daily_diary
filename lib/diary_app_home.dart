@@ -31,41 +31,29 @@ class DiaryAppHomeState extends State<DiaryAppHome>
           controller: tabController,
           indicatorColor: Colors.white,
           tabs: <Widget>[
-            Tab(child: Row(
+            Tab(
+                child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [Icon(Icons.add), Text("Add Entry")],)),
-            Tab(child: Row(
+              children: [Icon(Icons.add), Text("Add Entry")],
+            )),
+            Tab(
+                child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.play_circle_filled),
                 Text("Listen"),
-              ],)),
-            Tab(child: Row(
+              ],
+            )),
+            Tab(
+                child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.settings),
                 Text("Settings"),
-              ],)),
+              ],
+            )),
           ],
         ),
-        actions: <Widget>[
-//          Icon(Icons.search),
-//          Padding(
-//            padding: const EdgeInsets.symmetric(horizontal: 5.0),
-//          ),
-//          IconButton(icon: Icon(Icons.settings),
-//            onPressed: () {
-//              Navigator.push(
-//                context,
-//                MaterialPageRoute(builder: (context) => SettingsScreen()),
-//              ).then((value) {
-//                setState(() {
-////                  _max
-//                });
-//              });
-//            },
-//          )
-        ],
       ),
       body: TabBarView(
         controller: tabController,
@@ -77,6 +65,4 @@ class DiaryAppHomeState extends State<DiaryAppHome>
       ),
     );
   }
-
-
 }
