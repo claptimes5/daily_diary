@@ -9,6 +9,7 @@ import 'package:diary_app/database_accessor.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'package:table_calendar/table_calendar.dart';
 import 'package:diary_app/ui/alert_dialog.dart';
@@ -21,17 +22,18 @@ class RecordingScreen extends StatefulWidget {
 class _RecordingScreenState extends State<RecordingScreen> {
   bool _isRecording = false;
   bool _isPlaying = false;
-  final int _maxRecordingLength = 15000;
+  int _maxRecordingLength = 15000;
   String _path;
   FlutterSound flutterSound;
   StreamSubscription _playerSubscription;
   StreamSubscription _recorderSubscription;
   String recorderText = '15:00 seconds';
-  String playerText = '15';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
   CalendarController _calendarController;
   Map<DateTime, List> _events = {};
+  SharedPreferences prefs;
+  final recordingLengthKey = 'recording_lehgth';
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +53,21 @@ class _RecordingScreenState extends State<RecordingScreen> {
     populatePreviousRecordings();
 
     _calendarController = CalendarController();
+    _loadSettingsData();
+  }
+
+  _loadSettingsData() async {
+    prefs = await SharedPreferences.getInstance();
+
+    int _length = prefs.getInt(recordingLengthKey);
+
+    if (_length != null) {
+      setState(() {
+        // Recording length is stored in seconds but the recorder uses milliseconds
+        _maxRecordingLength = _length * 1000;
+        recorderText = _timeRemaining(0);
+      });
+    }
   }
 
   Widget _buildTableCalendar() {
@@ -178,14 +195,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
       print('startRecorder: $path');
 
       _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
-        int timeRemaining = _maxRecordingLength - e.currentPosition.toInt();
-        if (timeRemaining < 0)
-          timeRemaining = 0;
-
-        DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-            timeRemaining,
-            isUtc: true);
-        String txt = DateFormat('ss:SS', 'en_US').format(date);
 
         if (e.currentPosition.toInt() >= _maxRecordingLength) {
           print(_maxRecordingLength);
@@ -194,7 +203,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         }
 
         this.setState(() {
-          this.recorderText = '${txt.substring(0, 5)} seconds';
+          this.recorderText = _timeRemaining(e.currentPosition.toInt());
         });
       });
 
@@ -209,6 +218,26 @@ class _RecordingScreenState extends State<RecordingScreen> {
         this._isRecording = false;
       });
     }
+  }
+
+  String _timeRemaining(currentPosition) {
+    int timeRemaining = _maxRecordingLength - currentPosition;
+    if (timeRemaining < 0)
+      timeRemaining = 0;
+
+    DateTime date = new DateTime.fromMillisecondsSinceEpoch(
+        timeRemaining,
+        isUtc: true);
+    String format;
+
+    if (_maxRecordingLength >= 60000) {
+      format = 'mm:ss:SS';
+    } else {
+      format = 'ss:SS';
+    }
+    String txt = DateFormat(format, 'en_US').format(date);
+
+    return '${txt.substring(0, format.length)} seconds';
   }
 
   void _stopRecording() async {
@@ -324,7 +353,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
         this._path = null;
         this._isPlaying = false;
         this._fileSaved = true;
-        this.recorderText = '15:00 seconds';
+        this.recorderText = _timeRemaining(0);
       });
     } catch (e) {
       print('did not save file');
