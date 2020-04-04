@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -13,15 +14,31 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsState extends State<SettingsScreen> {
   int recordingLength = 15;
   TextEditingController _recordingLengthEditingController = TextEditingController();
-  TimeOfDay notificationTime = TimeOfDay.now();
+  TimeOfDay notificationTime = TimeOfDay(hour: 21, minute: 0);
   bool displayNotifications = false;
   final recordingLengthKey = 'recording_lehgth';
-  final _formKey = GlobalKey<FormState>();
   SharedPreferences prefs;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   void initState() {
     super.initState();
     _loadSettingsData();
+    _initNotification();
+  }
+
+  _initNotification() async {
+    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+
+    var initializationSettingsIOS = IOSInitializationSettings(
+        requestSoundPermission: false,
+        requestBadgePermission: false,
+        requestAlertPermission: false,
+        );
+
+    var initializationSettings = InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
   _loadSettingsData() async {
@@ -104,11 +121,7 @@ class _SettingsState extends State<SettingsScreen> {
                   title: Text("Daily Notifications"),
                   trailing: CommonSwitch(
                     defValue: displayNotifications,
-                    onChanged: (val) {
-                      setState(() {
-                        this.displayNotifications = !displayNotifications;
-                      });
-                    },
+                    onChanged: notificationToggled,
                   ),
                 ),
                 ListTile(
@@ -131,6 +144,18 @@ class _SettingsState extends State<SettingsScreen> {
         ],
       ),
   );
+
+  notificationToggled(val) {
+    if (val) {
+      _enableNotifications();
+    } else {
+      _cancelNotifications();
+    }
+
+    setState(() {
+      this.displayNotifications = val;
+    });
+  }
 
   Color disabledSettingsColor(bool isActive, Color defaultColor) {
     return (isActive ? defaultColor : Colors.black26);
@@ -165,9 +190,49 @@ class _SettingsState extends State<SettingsScreen> {
     if (picked != null && picked != notificationTime) {
 //      TimeOfDay _startTime = TimeOfDay(hour:int.parse(s.split(":")[0]),minute: int.parse(s.split(":")[1]));
 
-     setState(() {
-       notificationTime = picked;
-     });
+      setState(() {
+        notificationTime = picked;
+      });
+
+      _cancelNotifications();
+      _enableNotifications();
     }
+  }
+
+  _checkNotificationPermissions() async {
+    if (Platform.isIOS) {
+      var result = await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+  }
+
+  _enableNotifications() async {
+    _checkNotificationPermissions();
+
+    var androidPlatformChannelSpecifics =
+    AndroidNotificationDetails('repeatDailyAtTime channel id',
+        'repeatDailyAtTime channel name', 'repeatDailyAtTime description');
+    var iOSPlatformChannelSpecifics =
+    IOSNotificationDetails();
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    print(notificationTime);
+    print(Time(notificationTime.hour, notificationTime.minute).toMap().toString());
+    await flutterLocalNotificationsPlugin.showDailyAtTime(
+        0,
+        'Daily reminder',
+        'Time to record your diary entry',
+        Time(notificationTime.hour, notificationTime.minute),
+        platformChannelSpecifics);
+  }
+
+  _cancelNotifications() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
   }
 }
