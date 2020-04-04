@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Daily Diary',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // Add the 3 lines from here...
         primaryColor: Colors.white,
