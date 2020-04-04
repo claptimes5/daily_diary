@@ -12,7 +12,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     final DatabaseAccessor da = DatabaseAccessor();
@@ -26,7 +25,6 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.white,
       ),
       home: DiaryAppHome(),
-
     );
   }
 }
