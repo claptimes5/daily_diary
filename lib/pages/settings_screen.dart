@@ -3,6 +3,7 @@ import 'package:diary_app/ui/input_dropdown.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   @override
@@ -16,10 +17,11 @@ class _SettingsState extends State<SettingsScreen> {
   bool displayNotifications = false;
   final recordingLengthKey = 'recording_lehgth';
   final _formKey = GlobalKey<FormState>();
+  SharedPreferences prefs;
 
   void initState() {
     super.initState();
-    _recordingLengthEditingController.value = TextEditingValue(text: recordingLength.toString());
+    _loadSettingsData();
 //    _recordingLengthEditingController.addListener(() {
 //      final newText = _recordingLengthEditingController.text;
 //      _recordingLengthEditingController.value = _recordingLengthEditingController.value.copyWith(
@@ -28,6 +30,17 @@ class _SettingsState extends State<SettingsScreen> {
 //        composing: TextRange.empty,
 //      );
 //    });
+  }
+
+  _loadSettingsData() async {
+    prefs = await SharedPreferences.getInstance();
+
+    int _length = (prefs.getInt(recordingLengthKey) ?? 15);
+
+    _recordingLengthEditingController.value = TextEditingValue(text: _length.toString());
+    setState(() {
+
+    });
   }
 
   void dispose() {
@@ -127,19 +140,19 @@ class _SettingsState extends State<SettingsScreen> {
   Color disabledSettingsColor(bool isActive, Color defaultColor) {
     return (isActive ? defaultColor : Colors.black26);
   }
-
+  
   void saveRecordingLength(String value) {
-    saveKey(recordingLengthKey, value);
-  }
-
-  void saveKey(String key, String value) {
-    // TODO
+    prefs.setInt(recordingLengthKey, int.parse(value)).then((bool success) {
+      return success;
+    });
   }
 
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay picked =
     await showTimePicker(context: context, initialTime: notificationTime);
     if (picked != null && picked != notificationTime) {
+//      TimeOfDay _startTime = TimeOfDay(hour:int.parse(s.split(":")[0]),minute: int.parse(s.split(":")[1]));
+
      setState(() {
        notificationTime = picked;
      });
