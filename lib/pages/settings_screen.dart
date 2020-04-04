@@ -22,14 +22,6 @@ class _SettingsState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _loadSettingsData();
-//    _recordingLengthEditingController.addListener(() {
-//      final newText = _recordingLengthEditingController.text;
-//      _recordingLengthEditingController.value = _recordingLengthEditingController.value.copyWith(
-//        text: newText,
-//        selection: TextSelection(baseOffset: newText.length, extentOffset: newText.length),
-//        composing: TextRange.empty,
-//      );
-//    });
   }
 
   _loadSettingsData() async {
