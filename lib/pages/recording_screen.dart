@@ -237,7 +237,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
     String txt = DateFormat(format, 'en_US').format(date);
 
-    return '${txt.substring(0, format.length)} seconds';
+    return 'Time Remaining: ${txt.substring(0, format.length)}';
   }
 
   void _stopRecording() async {
