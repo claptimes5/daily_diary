@@ -31,7 +31,7 @@ class _SettingsState extends State<SettingsScreen> {
 
     _recordingLengthEditingController.value = TextEditingValue(text: _length.toString());
     setState(() {
-
+//      recordingLength = _length;
     });
   }
 
@@ -74,14 +74,17 @@ class _SettingsState extends State<SettingsScreen> {
                     Icons.music_note,
                     color: Colors.green,
                   ),
-                  title: Text("Recording Length (seconds)"),
+                  title: Text("Recording Length (max 999)"),
                   trailing: Container(
                     width: 100,
                     child: TextField(
                       maxLength: 3,
                       textAlign: TextAlign.end,
                       decoration: InputDecoration(
-                          border: InputBorder.none),
+                        suffix: Text('seconds'),
+                          counterText: '',
+                          border: InputBorder.none
+                      ),
                       controller: _recordingLengthEditingController,
                       onSubmitted: (String value) {
                         saveRecordingLength(value);
@@ -134,7 +137,24 @@ class _SettingsState extends State<SettingsScreen> {
   }
   
   void saveRecordingLength(String value) {
-    prefs.setInt(recordingLengthKey, int.parse(value)).then((bool success) {
+    int newValue;
+
+    try {
+     newValue = int.parse(value);
+    } catch (FormatException) {
+      newValue = 15;
+    }
+    // Prevent a user setting this to null or 0
+    if (newValue == 0) {
+      newValue = 15;
+    }
+
+    prefs.setInt(recordingLengthKey, newValue).then((bool success) {
+      setState(() {
+        recordingLength = newValue;
+      });
+
+      _loadSettingsData();
       return success;
     });
   }
