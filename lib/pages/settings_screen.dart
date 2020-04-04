@@ -27,7 +27,7 @@ class _SettingsState extends State<SettingsScreen> {
   }
 
   _initNotification() async {
-    var initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+    var initializationSettingsAndroid = AndroidInitializationSettings('daily_diary_icon72_72');
 
     var initializationSettingsIOS = IOSInitializationSettings(
         requestSoundPermission: false,
@@ -47,6 +47,9 @@ class _SettingsState extends State<SettingsScreen> {
     int _length = (prefs.getInt(recordingLengthKey) ?? 15);
 
     _recordingLengthEditingController.value = TextEditingValue(text: _length.toString());
+
+//    notificationTime
+//    displayNotifications
     setState(() {
 //      recordingLength = _length;
     });
@@ -59,13 +62,7 @@ class _SettingsState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Settings"),
-          elevation: 1.0,
-        ),
-        body: Container(child: bodyData())
-    );
+    return bodyData();
   }
 
   Widget bodyData() => SingleChildScrollView(
@@ -188,7 +185,6 @@ class _SettingsState extends State<SettingsScreen> {
     final TimeOfDay picked =
     await showTimePicker(context: context, initialTime: notificationTime);
     if (picked != null && picked != notificationTime) {
-//      TimeOfDay _startTime = TimeOfDay(hour:int.parse(s.split(":")[0]),minute: int.parse(s.split(":")[1]));
 
       setState(() {
         notificationTime = picked;
