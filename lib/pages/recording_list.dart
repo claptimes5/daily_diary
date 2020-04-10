@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:diary_app/pages/recording_list/list_section.dart';
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
@@ -54,30 +55,49 @@ class RecordingListState extends State<RecordingList> {
         } else if (snapshot.hasError) {
           return Container(child: Text('Error getting data'));
         } else {
-          recordings = snapshot.data;
+//          setState(() {
+            recordings = snapshot.data;
+
+//          });
 
           if (recordings.isEmpty) {
             return Container(child: Center(child: Text('No Recordings Yet')));
           }
 
-          return ListView.builder(
-              itemCount: recordings.length,
-              itemBuilder: (context, i) {
-                return listItem(recordings[i], i);
-              });
+          return ListSection(
+            recordings: snapshot.data,
+            recordPlaying: recordPlaying,
+            onRecordingDismissed: deleteRecording,
+            onItemPlay: playRecording,
+            onItemStop: stopPlayer,
+            onItemShare: shareFile,
+          );
         }
       },
     );
   }
 
-  void deleteRecording(Recording r) {
+  void deleteRecording(DismissDirection direction, Recording r, int index) {
+    setState(() {
+      deleteRecordingFromFileAndDb(r);
+
+      setState(() {
+        recordings.removeAt(index);
+      });
+    });
+
+    Scaffold.of(context)
+        .showSnackBar(
+        SnackBar(content: Text("Recording was deleted")));
+  }
+
+  void deleteRecordingFromFileAndDb(Recording r) {
     try {
       File(r.path).deleteSync();
     } on FileSystemException catch (e) {
       print('File did not exist. Will delete from database.');
       print(e.toString());
     }
-
 
     da.delete(r.id);
   }
@@ -178,117 +198,6 @@ class RecordingListState extends State<RecordingList> {
     }
 
     return Column(children: filterBarContents);
-  }
-
-  Future<bool> confirmDeletion() async {
-    return showDialog <bool>(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text("Are you sure?"),
-            content: SingleChildScrollView(
-              child: ListBody(
-                children: <Widget>[
-                  Text('Please confirm deletion.'),
-                ],
-              ),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: Text('Cancel'),
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-              FlatButton(
-                child: Text('Confirm'),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-              ),
-            ],
-          );
-        }
-    );
-  }
-
-  Widget listItem(item, index) {
-    final formatter = new DateFormat('MMMM dd, yyyy - h:mm a');
-    Color backgroundColor;
-    Color textColor;
-
-    backgroundColor = (recordPlaying == item.id ? Colors.greenAccent : Colors.transparent);
-    textColor = (recordPlaying == item.id ? Colors.white : Colors.black);
-
-    return Dismissible(
-      background: Container(color: Colors.red),
-      key: Key(item.id.toString()),
-      confirmDismiss: (direction) async {
-        return confirmDeletion();
-      },
-      onDismissed: (direction) {
-        setState(() {
-          deleteRecording(item);
-
-          setState(() {
-            recordings.removeAt(index);
-          });
-        });
-
-        // Show a snackbar. This snackbar could also contain "Undo" actions.
-        Scaffold.of(context)
-            .showSnackBar(
-            SnackBar(content: Text("Recording was deleted")));
-      },
-      child: new Column(
-        children: <Widget>[
-          Divider(
-            height: 10.0,
-          ),
-      Container(
-        color: backgroundColor,
-            child: ListTile(
-              trailing: IconButton(
-                  icon: (item.id == recordPlaying
-                      ? Icon(Icons.stop)
-                      : Icon(Icons.play_circle_filled)),
-                  onPressed: () {
-                    if (item.id == recordPlaying) {
-                      stopPlayer();
-                    } else {
-                      playRecording(item);
-                    }
-                  },
-                ),
-            title: new Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Text(
-                  formatter.format(item.time),
-                  style: new TextStyle(color: textColor, fontSize: 14.0),
-                ),
-                IconButton(
-                  icon: Icon(Icons.share),
-                  onPressed: () {
-                    shareFile(item.path);
-                  },
-                )
-              ],
-            ),
-// TODO: Add location
-//            subtitle: new Container(
-//              padding: const EdgeInsets.only(top: 5.0),
-//              child: new Text(
-//                'Washington, D.C.',
-//                style: new TextStyle(color: textColor, fontSize: 15.0),
-//              ),
-//            ),
-          )
-      )
-        ],
-      ),
-    );
   }
 
   @override
