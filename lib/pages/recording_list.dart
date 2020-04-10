@@ -46,37 +46,6 @@ class RecordingListState extends State<RecordingList> {
 //    initializeDateFormatting();
   }
 
-  Widget recordingListView() {
-    return FutureBuilder(
-      future: getRecordings(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return Container(child: Text('No Recordings Yet'));
-        } else if (snapshot.hasError) {
-          return Container(child: Text('Error getting data'));
-        } else {
-//          setState(() {
-            recordings = snapshot.data;
-
-//          });
-
-          if (recordings.isEmpty) {
-            return Container(child: Center(child: Text('No Recordings Yet')));
-          }
-
-          return ListSection(
-            recordings: snapshot.data,
-            recordPlaying: recordPlaying,
-            onRecordingDismissed: deleteRecording,
-            onItemPlay: playRecording,
-            onItemStop: stopPlayer,
-            onItemShare: shareFile,
-          );
-        }
-      },
-    );
-  }
-
   void deleteRecording(DismissDirection direction, Recording r, int index) {
     setState(() {
       deleteRecordingFromFileAndDb(r);
@@ -210,8 +179,28 @@ class RecordingListState extends State<RecordingList> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: [filterBar(), Expanded(child: recordingListView()), playerSection()]);
+    return FutureBuilder(
+      future: getRecordings(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || snapshot.hasError) {
+          recordings = [];
+        } else {
+          recordings = snapshot.data;
+        }
+
+        return Column(
+            children: [filterBar(), Expanded(child: ListSection(
+              recordings: snapshot.data,
+              recordPlaying: recordPlaying,
+              onRecordingDismissed: deleteRecording,
+              onItemPlay: playRecording,
+              onItemStop: stopPlayer,
+              onItemShare: shareFile,
+            )
+            ), playerSection()]
+        );
+      },
+    );
   }
 
   Widget playerSection() {
