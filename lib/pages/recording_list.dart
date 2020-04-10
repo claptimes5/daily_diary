@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:diary_app/pages/recording_list/filter_bar.dart';
 import 'package:diary_app/pages/recording_list/list_section.dart';
 import 'package:diary_app/pages/recording_list/player_section.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +26,7 @@ class RecordingListState extends State<RecordingList> {
   int recordIndexPlaying; // The index of the record that is playing in the `recordings` list
   bool _filterOpen = false;
   StreamSubscription _playerSubscription;
-  List<Map> dateRangeOptions = [
-    {'name': 'Past week', 'value': '1_week'},
-    {'name': 'Past month', 'value': '1_month'},
-    {'name': 'Past year', 'value': '1_year'},
-    {'name': 'All time', 'value': 'all'}
-  ];
+
   String _filterOption = 'all';
 
   void initState() {
@@ -126,45 +122,6 @@ class RecordingListState extends State<RecordingList> {
     return recordIndexPlaying != null && flutterSound.audioState == t_AUDIO_STATE.IS_PLAYING;
   }
 
-  Widget filterBar() {
-    Map option = dateRangeOptions.firstWhere((option) => option['value'] == _filterOption);
-    String filterText = 'Display: ${option['name']}';
-
-    List<Widget> filterBarContents = [
-      Container(
-          padding: EdgeInsets.only(left: 10.0, right: 5.0),
-          child: Row(children: [
-            Expanded(child: Text(filterText)),
-            Text('${recordings.length} recordings'),
-            IconButton(
-              icon: Icon(Icons.filter_list),
-              onPressed: () {
-                setState(() {
-                  _filterOpen = !_filterOpen;
-                });
-              },
-            ),
-          ]))
-    ];
-
-    if (_filterOpen) {
-      filterBarContents += dateRangeOptions.map((element) {
-        return RadioListTile(
-          title: Text(element['name']),
-            value: element['value'],
-            groupValue: _filterOption,
-            onChanged: (value) {
-              setState(() {
-                _filterOption = value;
-              });
-            },
-        );
-      }).toList();
-    }
-
-    return Column(children: filterBarContents);
-  }
-
   @override
   void dispose() {
     flutterSound.stopPlayer().catchError((e, trace) {
@@ -186,7 +143,12 @@ class RecordingListState extends State<RecordingList> {
 
         return Column(
             children: [
-              filterBar(),
+              FilterBar(
+                  recordingsLength: recordings.length,
+                  filterOpen: _filterOpen,
+                  selectedOption: _filterOption,
+                  filterOpenToggle: filterOpenToggle,
+                  selectFilterOption: selectFilterOption),
               Expanded(child: ListSection(
                 recordings: snapshot.data,
                 recordPlaying: recordPlaying,
@@ -205,6 +167,18 @@ class RecordingListState extends State<RecordingList> {
         );
       },
     );
+  }
+
+  void filterOpenToggle() {
+    setState(() {
+      _filterOpen = !_filterOpen;
+    });
+  }
+
+  void selectFilterOption(dynamic filterOption) {
+    setState(() {
+      _filterOption = filterOption;
+    });
   }
 
   Future<bool> fileExists(String path) async {
