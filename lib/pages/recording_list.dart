@@ -1,15 +1,11 @@
 import 'dart:async';
-import 'dart:collection';
-
 import 'package:diary_app/pages/recording_list/list_section.dart';
+import 'package:diary_app/pages/recording_list/player_section.dart';
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'dart:io';
-
-import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_share/flutter_share.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
@@ -189,67 +185,26 @@ class RecordingListState extends State<RecordingList> {
         }
 
         return Column(
-            children: [filterBar(), Expanded(child: ListSection(
-              recordings: snapshot.data,
-              recordPlaying: recordPlaying,
-              onRecordingDismissed: deleteRecording,
-              onItemPlay: playRecording,
-              onItemStop: stopPlayer,
-              onItemShare: shareFile,
-            )
-            ), playerSection()]
+            children: [
+              filterBar(),
+              Expanded(child: ListSection(
+                recordings: snapshot.data,
+                recordPlaying: recordPlaying,
+                onRecordingDismissed: deleteRecording,
+                onItemPlay: playRecording,
+                onItemStop: stopPlayer,
+                onItemShare: shareFile,
+              )),
+              PlayerSection(
+                  onStopPressed: resetPlayAll,
+                  onPlayPauseToggle: togglePlayAll,
+                  isStopped: (isPlayAllPaused() || isPlayerStopped()),
+                  recordIndexPlaying: recordIndexPlaying,
+                  recordingsLength: recordings.length)
+            ]
         );
       },
     );
-  }
-
-  Widget playerSection() {
-    Color playPauseColor;
-
-    if (isPlayAllPaused() || isPlayerStopped()) {
-      playPauseColor = Colors.green;
-    } else {
-      playPauseColor = Colors.red;
-    }
-
-    return Container(
-      color: Colors.black12,
-      child: Column(children: [
-        Text(playingText(),
-        style: TextStyle(
-          fontSize: 18,
-          color: Colors.black
-        )),
-        Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-          IconButton(
-            icon: Icon(Icons.stop, size: 50,),
-            onPressed: resetPlayAll,
-            iconSize: 50,
-              color: Colors.black87
-          ),
-            IconButton(
-              icon: Icon(
-                  (isPlayAllPaused() || isPlayerStopped() ? Icons
-                      .play_circle_outline : Icons
-                      .pause_circle_filled), size: 40,
-                  color: playPauseColor),
-              onPressed: togglePlayAll,
-            iconSize: 40,
-          ),
-        ],)
-
-      ]),
-      padding: EdgeInsets.all(10.0),);
-  }
-
-  String playingText() {
-    if (isPlayAllPlaying() || isPlayAllPaused()) {
-      return "Playing ${recordIndexPlaying + 1} of ${recordings.length}";
-    } else {
-      return 'Play all: stopped';
-    }
   }
 
   Future<bool> fileExists(String path) async {
