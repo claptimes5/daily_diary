@@ -58,7 +58,7 @@ class PlayerSection extends StatelessWidget {
   }
 
   String playingText() {
-    if (isStopped) {
+    if (isStopped || recordIndexPlaying == null) {
       return 'Play all: stopped';
     } else {
       return "Playing ${recordIndexPlaying + 1} of $recordingsLength";
