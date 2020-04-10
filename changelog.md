@@ -1,3 +1,7 @@
+# 0.3.0
+- Reorganize the recording screen for better UX
+- Add recording progress indicator
+
 # 0.2.1
 - Fix issue on Listen page where # of recordings in the filter bar did not match the number in the 
 list
