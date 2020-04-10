@@ -8,7 +8,6 @@ import 'package:path/path.dart' as p;
 import 'package:diary_app/database_accessor.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'package:table_calendar/table_calendar.dart';
@@ -34,6 +33,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   Map<DateTime, List> _events = {};
   SharedPreferences prefs;
   final recordingLengthKey = 'recording_lehgth';
+  int _currentPosition = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -45,15 +45,18 @@ class _RecordingScreenState extends State<RecordingScreen> {
     super.initState();
     flutterSound = new FlutterSound();
     flutterSound.setSubscriptionDuration(0.01);
-    flutterSound.setDbPeakLevelUpdate(0.8);
-    flutterSound.setDbLevelEnabled(true);
-
-    final _selectedDay = DateTime.now();
 
     populatePreviousRecordings();
 
     _calendarController = CalendarController();
     _loadSettingsData();
+  }
+
+  void cancelRecorderSubscriptions() {
+    if (_recorderSubscription != null) {
+      _recorderSubscription.cancel();
+      _recorderSubscription = null;
+    }
   }
 
   _loadSettingsData() async {
@@ -83,10 +86,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
           final startingDay = DateTime.now().subtract(Duration(days: 6));
           final endDay = DateTime.now();
-
-//          print(startingDay.weekday);
-//          print( DateFormat('EEEE').format(startingDay));
-//          print(StartingDayOfWeek.values[startingDay.weekday -1]);
 
           return TableCalendar(
             calendarController: _calendarController,
@@ -160,6 +159,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
       print('Stop recorder failed because it was not running');
     }, test: (e) => e is RecorderStoppedException);
 
+    cancelRecorderSubscriptions();
+
     _calendarController.dispose();
 
     super.dispose();
@@ -197,12 +198,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
       _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
 
         if (e.currentPosition.toInt() >= _maxRecordingLength) {
-          print(_maxRecordingLength);
-          print(e.currentPosition.toInt());
          _stopRecording();
         }
 
         this.setState(() {
+          this._currentPosition = e.currentPosition.toInt();
           this.recorderText = _timeRemaining(e.currentPosition.toInt());
         });
       });
@@ -245,10 +245,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       String result = await flutterSound.stopRecorder();
       print('stopRecorder: $result');
 
-      if (_recorderSubscription != null) {
-        _recorderSubscription.cancel();
-        _recorderSubscription = null;
-      }
+      cancelRecorderSubscriptions();
     } catch (err) {
       print('stopRecorder error: $err');
     }
@@ -276,12 +273,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
               this._isPlaying = false;
             });
           }
-
-          DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-              e.currentPosition.toInt(),
-              isUtc: true);
-//          String txt = DateFormat('mm:ss:SS', 'en_GB').format(date);
-
         }
       });
 
@@ -294,7 +285,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
   }
 
-  void stopPlayer() async {
+  Future<void> stopPlayer() async {
     try {
       String result = await flutterSound.stopPlayer();
       print('stopPlayer: $result');
@@ -331,7 +322,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       String fullDirPath = p.join(appDocPath, diaryEntryDir);
       String fileName = 'daily_diary_' + DateTime.now().toIso8601String() + '.aac';
-      String relativeFilePath = p.join(diaryEntryDir, fileName);;
+      String relativeFilePath = p.join(diaryEntryDir, fileName);
       String fullFilePath = p.join(appDocPath, diaryEntryDir, fileName);
 
       if (!(await Directory(fullDirPath).exists())) {
@@ -375,13 +366,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
           bottom: 10.0,
         ),
         child: Column(
-//          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             titleSection(),
             calendarSection(),
-            recordSection(),
-            playSection(),
+            playRecordSection(),
             saveSection()
           ],
         ));
@@ -477,42 +466,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Widget recordSection() {
-    Widget statusText;
-    Widget recordingButton;
-
-    if (_fileSaved) {
-      statusText = Text('Saved');
-    } else if (_isRecording) {
-      statusText = Text('Recording');
-    } else {
-      statusText = Text('Ready to record');
-    }
-
-    if (_isRecording) {
-      recordingButton = Icon(Icons.stop, color: Colors.black, size: 120);
-    } else if (_path != null) {
-      recordingButton = Icon(Icons.undo, color: Colors.black, size: 120);
-    } else {
-      recordingButton = Icon(Icons.fiber_manual_record,
-          color: Colors.red, size: 120);
-    }
-
-    return Expanded(child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: recordingButton,
-            onPressed: _toggleRecording,
-            padding: EdgeInsets.all(4.0),
-            iconSize: 120,
-          ),
-          Text(recorderText),
-          statusText,
-        ]));
-  }
-
-  Widget playSection() {
+  Widget playRecordSection() {
     Function onpressed;
     if (_isRecording || _path == null) {
       onpressed = null;
@@ -522,19 +476,87 @@ class _RecordingScreenState extends State<RecordingScreen> {
       onpressed = startPlayer;
     }
 
-    return Expanded(child: Container(
-//        padding: const EdgeInsets.all(32),
-        child:  Row(
-//                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-              IconButton(
-                  icon: (_isPlaying
-                      ? Icon(Icons.stop, size: 70)
-                      : Icon(Icons.play_arrow, size: 70, color: (onpressed != null ? Colors.green : Colors.grey))),
-                  onPressed: onpressed,
-                  iconSize: 70),
-            ])));
+    return Expanded(child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              RawMaterialButton(
+                onPressed: (this._path != null ? resetRecording : null),
+                child: Icon(Icons.undo,
+                    color: (this._path != null ? Colors.black : Colors.grey),
+                    size: 70),
+                shape: CircleBorder(),
+                elevation: 2.0,
+                fillColor: Colors.grey[200],
+                padding: const EdgeInsets.all(4.0),
+              ),
+              RawMaterialButton(
+                onPressed: _toggleRecording,
+                child: recordingButton(),
+                shape: CircleBorder(),
+                elevation: 2.0,
+                fillColor: Colors.grey[200],
+                padding: const EdgeInsets.all(4.0),
+              ),
+              RawMaterialButton(
+                onPressed: onpressed,
+                child: (_isPlaying
+                    ? Icon(Icons.stop, size: 70)
+                    : Icon(Icons.play_arrow, size: 70, color: (onpressed != null ? Colors.green : Colors.grey))),
+                shape: CircleBorder(),
+                elevation: 2.0,
+                fillColor: Colors.grey[200],
+                padding: const EdgeInsets.all(4.0),
+              ),
+            ],
+          ),
+          Column(
+            children: [
+              statusText(),
+              Text(recorderText),
+            ]
+          ),
+          LinearProgressIndicator(
+              value: _currentPosition / _maxRecordingLength,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+              backgroundColor: Colors.red),
+        ]
+    ));
+  }
+
+  Widget statusText() {
+    if (_fileSaved) {
+     return Text('Saved');
+    } else if (_isRecording) {
+      return Text('Recording');
+    } else if (this._path != null) {
+      return Text('Save Recording?');
+    } else {
+      return Text('Ready');
+    }
+  }
+
+  Widget recordingButton() {
+    if (_isRecording) {
+      return Icon(Icons.stop, color: Colors.black, size: 120);
+    } else {
+      return Icon(Icons.mic, color: Colors.red, size: 120);
+    }
+  }
+
+  Future<void> resetRecording() async {
+    _stopRecording();
+    await stopPlayer();
+
+    setState(() {
+      this._path = null;
+      this._isPlaying = false;
+      this._fileSaved = false;
+      this._currentPosition = 0;
+      this.recorderText = _timeRemaining(0);
+    });
   }
 
   Widget saveSection() {
@@ -545,15 +567,18 @@ class _RecordingScreenState extends State<RecordingScreen> {
       onpressed = saveRecording;
     }
 
-    return RaisedButton(
-        onPressed: onpressed,
-//      padding: const EdgeInsets.all(32),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Save', style: TextStyle(fontSize: 30.0),)
-          ],
+    return Container(
+        margin: EdgeInsets.only(left: 30, right: 30),
+        child: RaisedButton(
+            onPressed: onpressed,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check, size: 30),
+                Text('Save', style: TextStyle(fontSize: 30.0),)
+              ],
+            )
         )
-      );
+    );
   }
 }
