@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/flutter_sound_player.dart';
+import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:intl/intl.dart' show DateFormat;
@@ -23,7 +26,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
   bool _isPlaying = false;
   int _maxRecordingLength = 15000;
   String _path;
-  FlutterSound flutterSound;
+  FlutterSoundRecorder flutterSoundRecorder;
+  FlutterSoundPlayer flutterSoundPlayer;
   StreamSubscription _playerSubscription;
   StreamSubscription _recorderSubscription;
   String recorderText = '15:00 seconds';
@@ -43,8 +47,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   @override
   void initState() {
     super.initState();
-    flutterSound = new FlutterSound();
-    flutterSound.setSubscriptionDuration(0.01);
+    initPlayerAndRecorder();
 
     populatePreviousRecordings();
 
@@ -57,6 +60,32 @@ class _RecordingScreenState extends State<RecordingScreen> {
       _recorderSubscription.cancel();
       _recorderSubscription = null;
     }
+  }
+
+  void cancelPlayerSubscriptions() {
+    if (_playerSubscription != null) {
+      _playerSubscription.cancel();
+      _playerSubscription = null;
+    }
+  }
+
+  Future<void> initPlayerAndRecorder() async {
+    flutterSoundRecorder = await FlutterSoundRecorder().initialize();
+    flutterSoundPlayer = await FlutterSoundPlayer().initialize();
+    flutterSoundRecorder.setSubscriptionDuration(0.01);
+    flutterSoundPlayer.setSubscriptionDuration(0.01);
+  }
+
+  t_AUDIO_STATE get audioState {
+    if (flutterSoundPlayer != null) {
+      if (flutterSoundPlayer.isPlaying) return t_AUDIO_STATE.IS_PLAYING;
+      if (flutterSoundPlayer.isPaused) return t_AUDIO_STATE.IS_PAUSED;
+    }
+    if (flutterSoundRecorder != null) {
+      if (flutterSoundRecorder.isPaused) return t_AUDIO_STATE.IS_RECORDING_PAUSED;
+      if (flutterSoundRecorder.isRecording) return t_AUDIO_STATE.IS_RECORDING;
+    }
+    return t_AUDIO_STATE.IS_STOPPED;
   }
 
   _loadSettingsData() async {
@@ -125,41 +154,52 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   void requestPermissions() async {
-    Map<PermissionGroup, PermissionStatus> permissions =
-        await PermissionHandler().requestPermissions(
-            [PermissionGroup.storage, PermissionGroup.microphone]);
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.microphone,
+      Permission.storage,
+    ].request();
+
+    if (await Permission.storage.isPermanentlyDenied || await Permission.microphone.isPermanentlyDenied) {
+      // The user opted to never again see the permission request dialog for this
+      // app. The only way to change the permission's status now is to let the
+      // user manually enable it in the system settings.
+      openAppSettings();
+    }
   }
 
   Future<bool> checkPermissions() async {
-    PermissionStatus permissionStorage = await PermissionHandler()
-        .checkPermissionStatus(PermissionGroup.storage);
-    PermissionStatus permissionMicrophone = await PermissionHandler()
-        .checkPermissionStatus(PermissionGroup.microphone);
+    var microphoneStatus = await Permission.microphone.status;
+    var storageStatus = await Permission.storage.status;
 
-    PermissionStatus permissionGranted = PermissionStatus.granted;
-
-    if (permissionStorage.value != permissionGranted.value ||
-        permissionMicrophone.value != permissionGranted.value) {
-      AlertDialogBox().show(context,'Microphone and Storage permissions required',
+    if (microphoneStatus.isGranted && storageStatus.isGranted) {
+      return true;
+    } else {
+      await AlertDialogBox().show(context,'Microphone and Storage permissions required',
           'Please grant permissions so your voice can be recorded.', 'OK');
       requestPermissions();
 
       return false;
-    } else {
-      return true;
+    }
+  }
+
+  Future<void> releaseFlauto() async {
+    try {
+      await flutterSoundPlayer.release();
+      await flutterSoundRecorder.release();
+    } catch (e) {
+      print('Released unsuccessful');
+      print(e);
     }
   }
 
   @override
   void dispose() {
-    flutterSound.stopPlayer().catchError((e, trace) {
-      print('Stop player failed because it was not running');
-    }, test: (e) => e is PlayerRunningException);
-    flutterSound.stopRecorder().catchError((e, trace) {
-      print('Stop recorder failed because it was not running');
-    }, test: (e) => e is RecorderStoppedException);
+    flutterSoundPlayer.stopPlayer();
+    flutterSoundRecorder.stopRecorder();
 
     cancelRecorderSubscriptions();
+    cancelPlayerSubscriptions();
+    releaseFlauto();
 
     _calendarController.dispose();
 
@@ -187,7 +227,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
 
     try {
-      String path = await flutterSound.startRecorder(
+      String path = await flutterSoundRecorder.startRecorder(
         codec: t_CODEC.CODEC_AAC,
         sampleRate: 48000,
         bitRate: 128000,
@@ -195,7 +235,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       );
       print('startRecorder: $path');
 
-      _recorderSubscription = flutterSound.onRecorderStateChanged.listen((e) {
+      _recorderSubscription = flutterSoundRecorder.onRecorderStateChanged.listen((e) {
 
         if (e.currentPosition.toInt() >= _maxRecordingLength) {
          _stopRecording();
@@ -242,7 +282,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   void _stopRecording() async {
     try {
-      String result = await flutterSound.stopRecorder();
+      String result = await flutterSoundRecorder.stopRecorder();
       print('stopRecorder: $result');
 
       cancelRecorderSubscriptions();
@@ -258,7 +298,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     try {
       String path;
       if (await fileExists(_path))
-        path = await flutterSound.startPlayer(this._path);
+        path = await flutterSoundPlayer.startPlayer(this._path);
 
       if (path == null) {
         print('Error starting player');
@@ -266,9 +306,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
       }
       print('startPlayer: $path');
 
-      _playerSubscription = flutterSound.onPlayerStateChanged.listen((e) {
+      _playerSubscription = flutterSoundPlayer.onPlayerStateChanged.listen((e) {
         if (e != null) {
-          if (flutterSound.audioState == t_AUDIO_STATE.IS_STOPPED) {
+          if (audioState == t_AUDIO_STATE.IS_STOPPED) {
             setState(() {
               this._isPlaying = false;
             });
@@ -287,13 +327,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Future<void> stopPlayer() async {
     try {
-      String result = await flutterSound.stopPlayer();
+      String result = await flutterSoundPlayer.stopPlayer();
       print('stopPlayer: $result');
-      if (_playerSubscription != null) {
-        _playerSubscription.cancel();
-        _playerSubscription = null;
-      }
-//      sliderCurrentPosition = 0.0;
+      cancelPlayerSubscriptions();
+
     } catch (err) {
       print('error: $err');
     }
@@ -483,9 +520,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               RawMaterialButton(
-                onPressed: (this._path != null ? resetRecording : null),
-                child: Icon(Icons.undo,
-                    color: (this._path != null ? Colors.black : Colors.grey),
+                onPressed: (this._path != null && !_isRecording ? resetRecording : null),
+                child: Icon(Icons.delete,
+                    color: (this._path != null && !_isRecording ? Colors.black : Colors.grey),
                     size: 70),
                 shape: CircleBorder(),
                 elevation: 2.0,
@@ -493,7 +530,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 padding: const EdgeInsets.all(4.0),
               ),
               RawMaterialButton(
-                onPressed: _toggleRecording,
+                onPressed: (this._path == null || _isRecording ? _toggleRecording : null),
                 child: recordingButton(),
                 shape: CircleBorder(),
                 elevation: 2.0,

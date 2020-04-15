@@ -22,6 +22,7 @@ dependencies:
 #  flutter_sound: ^2.1.0
   flutter_sound:
     path: ../flutter_sound
+  flutter_ffmpeg: ^0.2.10
   intl: ^0.16.1
   sqflite:
   path_provider: ^1.6.0
@@ -29,7 +30,7 @@ dependencies:
 #  flutter_share: ^1.0.2+1
   flutter_share:
     path: ../flutter_share
-  permission_handler: '^4.4.0+hotfix.2'
+  permission_handler: '^5.0.0+hotfix.3'
   table_calendar: '^2.2.3'
 #  table_calendar:
 #    path: ../table_calendar

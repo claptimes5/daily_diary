@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-# platform :ios, '9.0'
+platform :ios, '9.3'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -67,15 +67,19 @@ target 'Runner' do
   # Plugin Pods
 
   # Prepare symlinks folder. We use symlinks to avoid having Podfile.lock
-  # referring to absolute paths on developers' machines.
-  system('rm -rf .symlinks')
-  system('mkdir -p .symlinks/plugins')
-  plugin_pods = parse_KV_file('../.flutter-plugins')
-  plugin_pods.each do |name, path|
-    symlink = File.join('.symlinks', 'plugins', name)
-    File.symlink(path, symlink)
-    pod name, :path => File.join(symlink, 'ios')
-  end
+    # referring to absolute paths on developers' machines.
+    system('rm -rf .symlinks')
+    system('mkdir -p .symlinks/plugins')
+    plugin_pods = parse_KV_file('../.flutter-plugins')
+    plugin_pods.each do |name, path|
+      symlink = File.join('.symlinks', 'plugins', name)
+      File.symlink(path, symlink)
+      if name == 'flutter_ffmpeg'
+          pod name+'/audio-lts', :path => File.join(symlink, 'ios')
+      else
+          pod name, :path => File.join(symlink, 'ios')
+      end
+    end
 end
 
 # Prevent Cocoapods from embedding a second Flutter framework and causing an error with the new Xcode build system.
