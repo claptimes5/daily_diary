@@ -24,6 +24,7 @@ class RecordingScreen extends StatefulWidget {
 class _RecordingScreenState extends State<RecordingScreen> {
   bool _isRecording = false;
   bool _isPlaying = false;
+  bool _recordingLimitReached = false;
   int _maxRecordingLength = 15000;
   String _path;
   FlutterSoundRecorder flutterSoundRecorder;
@@ -208,8 +209,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   void _toggleRecording() {
     setState(() {
-      if (_isRecording) {
-        _stopRecording();
+      if (audioState == t_AUDIO_STATE.IS_RECORDING) {
+        flutterSoundRecorder.pauseRecorder();
         setState(() {
           _isRecording = false;
         });
@@ -227,31 +228,42 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
 
     try {
-      String path = await flutterSoundRecorder.startRecorder(
-        codec: t_CODEC.CODEC_AAC,
-        sampleRate: 48000,
-        bitRate: 128000,
-        numChannels: 1,
-      );
-      print('startRecorder: $path');
+      if (audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
+        flutterSoundRecorder.resumeRecorder();
 
-      _recorderSubscription = flutterSoundRecorder.onRecorderStateChanged.listen((e) {
-
-        if (e.currentPosition.toInt() >= _maxRecordingLength) {
-         _stopRecording();
-        }
-
-        this.setState(() {
-          this._currentPosition = e.currentPosition.toInt();
-          this.recorderText = _timeRemaining(e.currentPosition.toInt());
+        setState(() {
+          _isRecording = true;
         });
-      });
+      } else {
+        String path = await flutterSoundRecorder.startRecorder(
+          codec: t_CODEC.CODEC_AAC,
+          sampleRate: 48000,
+          bitRate: 128000,
+          numChannels: 1,
+        );
 
-      setState(() {
-        _isRecording = true;
-        this._path = path;
-        this._fileSaved = false;
-      });
+        _recorderSubscription = flutterSoundRecorder.onRecorderStateChanged.listen((e) {
+
+          if (e.currentPosition.toInt() >= _maxRecordingLength) {
+            _stopRecording();
+
+            this.setState(() {
+              this._recordingLimitReached = true;
+            });
+          }
+
+          this.setState(() {
+            this._currentPosition = e.currentPosition.toInt();
+            this.recorderText = _timeRemaining(e.currentPosition.toInt());
+          });
+        });
+
+        setState(() {
+          _isRecording = true;
+          this._path = path;
+          this._fileSaved = false;
+        });
+      }
     } catch (err) {
       print('startRecorder error: $err');
       setState(() {
@@ -308,7 +320,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       _playerSubscription = flutterSoundPlayer.onPlayerStateChanged.listen((e) {
         if (e != null) {
-          if (audioState == t_AUDIO_STATE.IS_STOPPED) {
+          print(audioState.toString());
+          if (audioState == t_AUDIO_STATE.IS_STOPPED || audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
             setState(() {
               this._isPlaying = false;
             });
@@ -318,7 +331,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       this.setState(() {
         this._isPlaying = true;
-//            this.playerText = txt.substring(0, 8);
       });
     } catch (err) {
       print('error: $err');
@@ -530,7 +542,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 padding: const EdgeInsets.all(4.0),
               ),
               RawMaterialButton(
-                onPressed: (this._path == null || _isRecording ? _toggleRecording : null),
+                onPressed: (this._recordingLimitReached || this._isPlaying ? null : _toggleRecording),
                 child: recordingButton(),
                 shape: CircleBorder(),
                 elevation: 2.0,
@@ -576,21 +588,28 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget recordingButton() {
-    if (_isRecording) {
-      return Icon(Icons.stop, color: Colors.black, size: 120);
+    // Indicated disabled record button when playing audio
+    Color micColor = (_isPlaying ? Colors.grey : Colors.red);
+
+    if (audioState == t_AUDIO_STATE.IS_RECORDING) {
+      return Icon(Icons.pause, color: Colors.black, size: 120);
     } else {
-      return Icon(Icons.mic, color: Colors.red, size: 120);
+      return Icon(Icons.mic, color: micColor, size: 120);
     }
   }
 
   Future<void> resetRecording() async {
     _stopRecording();
     await stopPlayer();
+    cancelPlayerSubscriptions();
+    cancelRecorderSubscriptions();
 
     setState(() {
+      this._recordingLimitReached = false;
       this._path = null;
       this._isPlaying = false;
       this._fileSaved = false;
+      this._isRecording = false;
       this._currentPosition = 0;
       this.recorderText = _timeRemaining(0);
     });
