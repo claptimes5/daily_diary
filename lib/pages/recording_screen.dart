@@ -1,5 +1,6 @@
 import 'package:diary_app/pages/recording_screen/calendar_section.dart';
 import 'package:diary_app/pages/recording_screen/record_widget.dart';
+import 'package:diary_app/pages/recording_screen/title_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -361,32 +362,45 @@ class _RecordingScreenState extends State<RecordingScreen> {
   }
 
   Widget _buildPage() {
-    return Container(
-        padding: const EdgeInsets.only(
-          left: 0.0,
-          top: 0.0,
-          right: 0.0,
-          bottom: 10.0,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            titleSection(),
-            calendarWidget(),
-            RecordWidget(
-              recordingPath: this._path,
-              isRecording: this._isRecording,
-              onResetRecording: resetRecording,
-              recorderText: recorderText,
-              currentPosition: this._currentPosition,
-              maxRecordingLength: this._maxRecordingLength,
-              fileSaved: this._fileSaved,
-              onToggleRecording: toggleRecording,
-              recordingLimitReached: this._recordingLimitReached,
-            ),
-            saveSection()
-          ],
-        ));
+    return FutureBuilder(
+        future: isEntryComplete(),
+        builder: (context, snapshot) {
+          bool _isEntryComplete = false;
+
+          // snapshot.data returns true if entry is complete for today
+          if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
+            _isEntryComplete = snapshot.data;
+          }
+
+          return Container(
+              padding: const EdgeInsets.only(
+                left: 0.0,
+                top: 0.0,
+                right: 0.0,
+                bottom: 10.0,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  TitleSection(isTodaysEntryComplete: _isEntryComplete),
+                  CalendarSection(events: this._events,
+                      isTodaysEntryComplete: _isEntryComplete,
+                      calendarController: _calendarController),
+                  RecordWidget(
+                    recordingPath: this._path,
+                    isRecording: this._isRecording,
+                    onResetRecording: resetRecording,
+                    recorderText: recorderText,
+                    currentPosition: this._currentPosition,
+                    maxRecordingLength: this._maxRecordingLength,
+                    fileSaved: this._fileSaved,
+                    onToggleRecording: toggleRecording,
+                    recordingLimitReached: this._recordingLimitReached,
+                  ),
+                  saveSection()
+                ],
+              ));
+        });
   }
 
   String currentDate() {
@@ -428,58 +442,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
       _events = events;
     });
   }
-
-  Widget calendarWidget() {
-    return FutureBuilder(
-        future: isEntryComplete(),
-    builder: (context, snapshot) {
-      bool _isEntryComplete = false;
-
-      // snapshot.data returns true if entry is complete for today
-      if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
-        _isEntryComplete = snapshot.data;
-      }
-
-      return CalendarSection(events: this._events, isTodaysEntryComplete: _isEntryComplete, calendarController: _calendarController);
-    });
-  }
-
-  Widget titleSection() {
-    String recordCompleteText = 'Incomplete';
-    Color recordCompleteColor = Colors.redAccent;
-
-    return FutureBuilder(
-      future: isEntryComplete(),
-      builder: (context, snapshot) {
-        if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
-          recordCompleteText = 'Complete';
-          recordCompleteColor = Colors.lightGreen;
-        }
-
-        return Container(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children:
-                [
-                  Text(
-                      '${DateFormat('EEEE').format(DateTime.now())}\'s Entry: ',
-                      style: TextStyle(
-//                          fontWeight: FontWeight.bold,
-                          fontSize: 22
-                      )),
-                  Text(recordCompleteText,
-                      style: TextStyle(
-                          color: recordCompleteColor,
-//                  fontWeight: FontWeight.bold,
-                          fontSize: 20
-                      ))
-                ])
-        );
-      },
-    );
-  }
-
 
   Future<void> resetRecording() async {
     _stopRecording();
