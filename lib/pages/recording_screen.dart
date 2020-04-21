@@ -84,12 +84,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
       setState(() {
         // Recording length is stored in seconds but the recorder uses milliseconds
         _maxRecordingLength = _length * 1000;
-        recorderText = _timeRemaining(0);
       });
     }
   }
-
-
 
   void requestPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
@@ -187,7 +184,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
           this.setState(() {
             this._currentPosition = e.currentPosition.toInt();
-            this.recorderText = _timeRemaining(e.currentPosition.toInt());
           });
         });
 
@@ -203,26 +199,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
         this._isRecording = false;
       });
     }
-  }
-
-  String _timeRemaining(currentPosition) {
-    int timeRemaining = _maxRecordingLength - currentPosition;
-    if (timeRemaining < 0)
-      timeRemaining = 0;
-
-    DateTime date = new DateTime.fromMillisecondsSinceEpoch(
-        timeRemaining,
-        isUtc: true);
-    String format;
-
-    if (_maxRecordingLength >= 60000) {
-      format = 'mm:ss:SS';
-    } else {
-      format = 'ss:SS';
-    }
-    String txt = DateFormat(format, 'en_US').format(date);
-
-    return 'Time Remaining: ${txt.substring(0, format.length)}';
   }
 
   void _stopRecording() async {
@@ -281,11 +257,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       // Retrieve previous recordings so they can be displayed in the calendar widget
       populatePreviousRecordings();
 
-      setState(() {
-        this._path = null;
-        this._fileSaved = true;
-        this.recorderText = _timeRemaining(0);
-      });
+      resetRecording();
     } catch (e) {
       print('did not save file');
       print(e.toString());
@@ -326,7 +298,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
                     recordingPath: this._path,
                     isRecording: this._isRecording,
                     onResetRecording: resetRecording,
-                    recorderText: recorderText,
+//                    recorderText: recorderText,
                     currentPosition: this._currentPosition,
                     maxRecordingLength: this._maxRecordingLength,
                     fileSaved: this._fileSaved,
@@ -389,14 +361,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
       this._fileSaved = false;
       this._isRecording = false;
       this._currentPosition = 0;
-      this.recorderText = _timeRemaining(0);
     });
   }
 
   Widget saveSection() {
     Function onpressed;
-    print(_isRecording);
-    print(_path);
     if (_isRecording || _path == null) {
       onpressed = null;
     } else {
