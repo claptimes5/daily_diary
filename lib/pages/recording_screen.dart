@@ -4,7 +4,6 @@ import 'package:diary_app/pages/recording_screen/title_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound.dart';
-import 'package:flutter_sound/flutter_sound_player.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:async';
 import 'dart:io';
@@ -26,13 +25,10 @@ class RecordingScreen extends StatefulWidget {
 
 class _RecordingScreenState extends State<RecordingScreen> {
   bool _isRecording = false;
-  bool _isPlaying = false;
   bool _recordingLimitReached = false;
   int _maxRecordingLength = 24000;
   String _path;
   FlutterSoundRecorder flutterSoundRecorder;
-  FlutterSoundPlayer flutterSoundPlayer;
-  StreamSubscription _playerSubscription;
   StreamSubscription _recorderSubscription;
   String recorderText = '24:00 seconds';
   String diaryEntryDir = 'diary_entries';
@@ -51,7 +47,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
   @override
   void initState() {
     super.initState();
-    initPlayerAndRecorder();
+    initRecorder();
 
     populatePreviousRecordings();
 
@@ -66,25 +62,12 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
   }
 
-  void cancelPlayerSubscriptions() {
-    if (_playerSubscription != null) {
-      _playerSubscription.cancel();
-      _playerSubscription = null;
-    }
-  }
-
-  void initPlayerAndRecorder() {
+  void initRecorder() {
     flutterSoundRecorder = FlutterSoundRecorder();
-    flutterSoundPlayer = FlutterSoundPlayer();
     flutterSoundRecorder.setSubscriptionDuration(0.01);
-    flutterSoundPlayer.setSubscriptionDuration(0.01);
   }
 
   t_AUDIO_STATE get audioState {
-    if (flutterSoundPlayer != null) {
-      if (flutterSoundPlayer.isPlaying) return t_AUDIO_STATE.IS_PLAYING;
-      if (flutterSoundPlayer.isPaused) return t_AUDIO_STATE.IS_PAUSED;
-    }
     if (flutterSoundRecorder != null) {
       if (flutterSoundRecorder.isPaused) return t_AUDIO_STATE.IS_RECORDING_PAUSED;
       if (flutterSoundRecorder.isRecording) return t_AUDIO_STATE.IS_RECORDING;
@@ -139,7 +122,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Future<void> releaseFlauto() async {
     try {
-      await flutterSoundPlayer.release();
       await flutterSoundRecorder.release();
     } catch (e) {
       print('Released unsuccessful');
@@ -149,11 +131,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   @override
   void dispose() {
-    flutterSoundPlayer.stopPlayer();
     flutterSoundRecorder.stopRecorder();
 
     cancelRecorderSubscriptions();
-    cancelPlayerSubscriptions();
     releaseFlauto();
 
     _calendarController.dispose();
@@ -259,58 +239,15 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
   }
 
-  void startPlayer() async {
-    try {
-      String path;
-      if (await fileExists(_path))
-        path = await flutterSoundPlayer.startPlayer(this._path);
-
-      if (path == null) {
-        print('Error starting player');
-        return;
-      }
-      print('startPlayer: $path');
-
-      _playerSubscription = flutterSoundPlayer.onPlayerStateChanged.listen((e) {
-        if (e != null) {
-          if (audioState == t_AUDIO_STATE.IS_STOPPED || audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
-            cancelPlayerSubscriptions();
-            flutterSoundPlayer.release();
-            setState(() {
-              this._isPlaying = false;
-            });
-          }
-        }
-      });
-
-      this.setState(() {
-        this._isPlaying = true;
-      });
-    } catch (err) {
-      print('error: $err');
-      _stopRecording();
-    }
-  }
-
-  Future<void> stopPlayer() async {
-    try {
-      String result = await flutterSoundPlayer.stopPlayer();
-      print('stopPlayer: $result');
-      cancelPlayerSubscriptions();
-
-    } catch (err) {
-      print('error: $err');
-    }
-    this.setState(() {
-      this._isPlaying = false;
-    });
-  }
-
   void saveRecording() async {
     if (_fileSaved) {
       return;
     }
     try {
+      if (audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
+        _stopRecording();
+      }
+
       //TODO: make on subdirectory per month
       final tmpRecording = File(this._path);
       Directory appDocDir;
@@ -346,7 +283,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       setState(() {
         this._path = null;
-        this._isPlaying = false;
         this._fileSaved = true;
         this.recorderText = _timeRemaining(0);
       });
@@ -445,14 +381,11 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Future<void> resetRecording() async {
     _stopRecording();
-    await stopPlayer();
-    cancelPlayerSubscriptions();
     cancelRecorderSubscriptions();
 
     setState(() {
       this._recordingLimitReached = false;
       this._path = null;
-      this._isPlaying = false;
       this._fileSaved = false;
       this._isRecording = false;
       this._currentPosition = 0;
@@ -462,6 +395,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
   Widget saveSection() {
     Function onpressed;
+    print(_isRecording);
+    print(_path);
     if (_isRecording || _path == null) {
       onpressed = null;
     } else {
