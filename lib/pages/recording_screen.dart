@@ -29,7 +29,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
   String _path;
   FlutterSoundRecorder flutterSoundRecorder;
   StreamSubscription _recorderSubscription;
-  String recorderText = '24:00 seconds';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
   CalendarController _calendarController;
@@ -293,7 +292,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
                     recordingPath: this._path,
                     isRecording: this._isRecording,
                     onResetRecording: resetRecording,
-//                    recorderText: recorderText,
                     currentPosition: this._currentPosition,
                     maxRecordingLength: this._maxRecordingLength,
                     fileSaved: this._fileSaved,
