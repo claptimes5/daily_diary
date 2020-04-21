@@ -25,13 +25,13 @@ class _RecordingScreenState extends State<RecordingScreen> {
   bool _isRecording = false;
   bool _isPlaying = false;
   bool _recordingLimitReached = false;
-  int _maxRecordingLength = 15000;
+  int _maxRecordingLength = 24000;
   String _path;
   FlutterSoundRecorder flutterSoundRecorder;
   FlutterSoundPlayer flutterSoundPlayer;
   StreamSubscription _playerSubscription;
   StreamSubscription _recorderSubscription;
-  String recorderText = '15:00 seconds';
+  String recorderText = '24:00 seconds';
   String diaryEntryDir = 'diary_entries';
   bool _fileSaved = false;
   CalendarController _calendarController;

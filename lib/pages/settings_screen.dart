@@ -12,7 +12,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsState extends State<SettingsScreen> {
-  int recordingLength = 15;
+  int recordingLength = 24;
   TextEditingController _recordingLengthEditingController = TextEditingController();
   TimeOfDay notificationTime = TimeOfDay(hour: 21, minute: 0);
   bool displayNotifications = false;
@@ -47,7 +47,7 @@ class _SettingsState extends State<SettingsScreen> {
     prefs = await SharedPreferences.getInstance();
 
     // Load recording length
-    int _length = (prefs.getInt(recordingLengthKey) ?? 15);
+    int _length = (prefs.getInt(recordingLengthKey) ?? 24);
     _recordingLengthEditingController.value = TextEditingValue(text: _length.toString());
 
     // Load whether notifications are enabled
@@ -184,11 +184,11 @@ class _SettingsState extends State<SettingsScreen> {
     try {
      newValue = int.parse(value);
     } catch (FormatException) {
-      newValue = 15;
+      newValue = 24;
     }
     // Prevent a user setting this to null or 0
     if (newValue == 0) {
-      newValue = 15;
+      newValue = 24;
     }
 
     prefs.setInt(recordingLengthKey, newValue).then((bool success) {
