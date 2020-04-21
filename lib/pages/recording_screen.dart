@@ -1,3 +1,4 @@
+import 'package:diary_app/pages/recording_screen/calendar_section.dart';
 import 'package:diary_app/pages/recording_screen/record_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flauto.dart';
@@ -104,56 +105,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
   }
 
-  Widget _buildTableCalendar() {
-    return FutureBuilder(
-        future: isEntryComplete(),
-        builder: (context, snapshot) {
-          Color todayColor = Colors.red[300];
 
-          // snapshot.data returns true if entry is complete for today
-          if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
-            todayColor = Colors.green;
-          }
-
-          final startingDay = DateTime.now().subtract(Duration(days: 6));
-          final endDay = DateTime.now();
-
-          return TableCalendar(
-            calendarController: _calendarController,
-            events: _events,
-//      holidays: _holidays,
-            initialCalendarFormat: CalendarFormat.week,
-            startingDayOfWeek: StartingDayOfWeek.values[startingDay.weekday -1],
-            startDay: startingDay,
-            endDay: endDay,
-            calendarStyle: CalendarStyle(
-                selectedColor: Colors.deepOrange[400],
-                todayColor: todayColor,
-                markersColor: Colors.green[700],
-                outsideDaysVisible: false,
-                highlightSelected: false,
-                weekendStyle: null,
-                outsideWeekendStyle: null,
-            ),
-            headerVisible: false,
-            availableGestures: AvailableGestures.none,
-            daysOfWeekStyle: DaysOfWeekStyle(
-                weekdayStyle: TextStyle(color: const Color(0xFF616161)),
-                weekendStyle: TextStyle(color: const Color(0xFF616161))),
-            headerStyle: HeaderStyle(
-              centerHeaderTitle: true,
-              formatButtonVisible: false,
-              headerPadding: EdgeInsets.symmetric(vertical: 2.0),
-//        formatButtonTextStyle: TextStyle().copyWith(color: Colors.white, fontSize: 15.0),
-//        formatButtonDecoration: BoxDecoration(
-//          color: Colors.deepOrange[400],
-//          borderRadius: BorderRadius.circular(16.0),
-//        ),
-            ),
-          );
-        }
-    );
-  }
 
   void requestPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
@@ -420,7 +372,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             titleSection(),
-            calendarSection(),
+            calendarWidget(),
             RecordWidget(
               recordingPath: this._path,
               isRecording: this._isRecording,
@@ -477,18 +429,19 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
   }
 
-  Widget calendarSection() {
-    Map daysCounted = {};
+  Widget calendarWidget() {
+    return FutureBuilder(
+        future: isEntryComplete(),
+    builder: (context, snapshot) {
+      bool _isEntryComplete = false;
 
-    // Count the number of unique events per day
-    _events.keys.forEach((e) {
-      daysCounted[e.day] = 1;
+      // snapshot.data returns true if entry is complete for today
+      if (snapshot.hasData && !snapshot.hasError && snapshot.data) {
+        _isEntryComplete = snapshot.data;
+      }
+
+      return CalendarSection(events: this._events, isTodaysEntryComplete: _isEntryComplete, calendarController: _calendarController);
     });
-
-    return Column(children: [
-      _buildTableCalendar(),
-      Text('You\'ve recorded ${daysCounted.length} of the last 7 days', style: TextStyle(color: Colors.black54),)
-    ]);
   }
 
   Widget titleSection() {
