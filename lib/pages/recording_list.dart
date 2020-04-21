@@ -141,7 +141,10 @@ class RecordingListState extends State<RecordingList> {
 
   @override
   void dispose() {
-    stopPlayer();
+    if (audioState == t_AUDIO_STATE.IS_PLAYING || audioState == t_AUDIO_STATE.IS_PAUSED) {
+      flutterSoundPlayer.stopPlayer();
+      cancelPlayerSubscriptions();
+    }
     super.dispose();
   }
 
