@@ -1,6 +1,8 @@
 # 0.3.0
 - Reorganize the recording screen for better UX
+- Add ability pause and resume recordings
 - Add recording progress indicator
+- Remove playback on recording screen since it was not compatible with pausing of recording
 
 # 0.2.1
 - Fix issue on Listen page where # of recordings in the filter bar did not match the number in the 
