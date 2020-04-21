@@ -1,3 +1,4 @@
+import 'package:diary_app/pages/recording_screen/record_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flauto.dart';
 import 'package:flutter_sound/flutter_sound.dart';
@@ -207,7 +208,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
     super.dispose();
   }
 
-  void _toggleRecording() async {
+  void toggleRecording() async {
     if (audioState == t_AUDIO_STATE.IS_RECORDING) {
       await flutterSoundRecorder.pauseRecorder();
 
@@ -420,7 +421,17 @@ class _RecordingScreenState extends State<RecordingScreen> {
           children: [
             titleSection(),
             calendarSection(),
-            playRecordSection(),
+            RecordWidget(
+              recordingPath: this._path,
+              isRecording: this._isRecording,
+              onResetRecording: resetRecording,
+              recorderText: recorderText,
+              currentPosition: this._currentPosition,
+              maxRecordingLength: this._maxRecordingLength,
+              fileSaved: this._fileSaved,
+              onToggleRecording: toggleRecording,
+              recordingLimitReached: this._recordingLimitReached,
+            ),
             saveSection()
           ],
         ));
@@ -516,83 +527,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
     );
   }
 
-  Widget playRecordSection() {
-    Function onpressed;
-    if (_isRecording || _path == null) {
-      onpressed = null;
-    } else if (_isPlaying) {
-      onpressed = stopPlayer;
-    } else {
-      onpressed = startPlayer;
-    }
-
-    return Expanded(child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              RawMaterialButton(
-              onPressed: (this._path != null && !_isRecording ? resetRecording : null),
-                child: Icon(Icons.delete,
-                    color: (this._path != null && !_isRecording ? Colors.black : Colors.grey[350]),
-                    size: 70),
-                shape: CircleBorder(),
-                elevation: 2.0,
-                fillColor: Colors.grey[200],
-                padding: const EdgeInsets.all(4.0),
-              ),
-              RawMaterialButton(
-                onPressed: (this._recordingLimitReached || this._isPlaying ? null : _toggleRecording),
-                child: recordingButton(),
-                shape: CircleBorder(),
-                elevation: 2.0,
-                fillColor: Colors.grey[200],
-                padding: const EdgeInsets.all(4.0),
-              ),
-              Container(
-                width: 82,
-                height: 82,
-              )
-            ],
-          ),
-          Column(
-            children: [
-              statusText(),
-              Text(recorderText),
-            ]
-          ),
-          LinearProgressIndicator(
-              value: _currentPosition / _maxRecordingLength,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-              backgroundColor: Colors.red),
-        ]
-    ));
-  }
-
-  Widget statusText() {
-    if (_fileSaved) {
-     return Text('Saved');
-    } else if (_isRecording) {
-      return Text('Recording');
-    } else if (this._path != null) {
-      return Text('Save Recording?');
-    } else {
-      return Text('Ready');
-    }
-  }
-
-  Widget recordingButton() {
-    // Indicated disabled record button when playing audio
-    Color micColor = (_isPlaying ? Colors.grey : Colors.red);
-
-    if (audioState == t_AUDIO_STATE.IS_RECORDING) {
-      return Icon(Icons.pause, color: Colors.black, size: 120);
-    } else {
-      return Icon(Icons.mic, color: micColor, size: 120);
-    }
-  }
 
   Future<void> resetRecording() async {
     _stopRecording();
