@@ -70,9 +70,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
   }
 
-  Future<void> initPlayerAndRecorder() async {
-    flutterSoundRecorder = await FlutterSoundRecorder().initialize();
-    flutterSoundPlayer = await FlutterSoundPlayer().initialize();
+  void initPlayerAndRecorder() {
+    flutterSoundRecorder = FlutterSoundRecorder();
+    flutterSoundPlayer = FlutterSoundPlayer();
     flutterSoundRecorder.setSubscriptionDuration(0.01);
     flutterSoundPlayer.setSubscriptionDuration(0.01);
   }
@@ -207,17 +207,16 @@ class _RecordingScreenState extends State<RecordingScreen> {
     super.dispose();
   }
 
-  void _toggleRecording() {
-    setState(() {
-      if (audioState == t_AUDIO_STATE.IS_RECORDING) {
-        flutterSoundRecorder.pauseRecorder();
-        setState(() {
-          _isRecording = false;
-        });
-      } else {
-        _startRecording();
-      }
-    });
+  void _toggleRecording() async {
+    if (audioState == t_AUDIO_STATE.IS_RECORDING) {
+      await flutterSoundRecorder.pauseRecorder();
+
+      setState(() {
+        _isRecording = false;
+      });
+    } else {
+      _startRecording();
+    }
   }
 
   void _startRecording() async {
@@ -228,8 +227,8 @@ class _RecordingScreenState extends State<RecordingScreen> {
     });
 
     try {
-      if (audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
-        flutterSoundRecorder.resumeRecorder();
+      if (flutterSoundRecorder.isPaused) {
+        await flutterSoundRecorder.resumeRecorder();
 
         setState(() {
           _isRecording = true;
@@ -320,8 +319,9 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
       _playerSubscription = flutterSoundPlayer.onPlayerStateChanged.listen((e) {
         if (e != null) {
-          print(audioState.toString());
           if (audioState == t_AUDIO_STATE.IS_STOPPED || audioState == t_AUDIO_STATE.IS_RECORDING_PAUSED) {
+            cancelPlayerSubscriptions();
+            flutterSoundPlayer.release();
             setState(() {
               this._isPlaying = false;
             });
@@ -334,6 +334,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
       });
     } catch (err) {
       print('error: $err');
+      _stopRecording();
     }
   }
 
@@ -529,12 +530,13 @@ class _RecordingScreenState extends State<RecordingScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               RawMaterialButton(
-                onPressed: (this._path != null && !_isRecording ? resetRecording : null),
+              onPressed: (this._path != null && !_isRecording ? resetRecording : null),
                 child: Icon(Icons.delete,
-                    color: (this._path != null && !_isRecording ? Colors.black : Colors.grey),
+                    color: (this._path != null && !_isRecording ? Colors.black : Colors.grey[350]),
                     size: 70),
                 shape: CircleBorder(),
                 elevation: 2.0,
@@ -549,16 +551,10 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 fillColor: Colors.grey[200],
                 padding: const EdgeInsets.all(4.0),
               ),
-              RawMaterialButton(
-                onPressed: onpressed,
-                child: (_isPlaying
-                    ? Icon(Icons.stop, size: 70)
-                    : Icon(Icons.play_arrow, size: 70, color: (onpressed != null ? Colors.green : Colors.grey))),
-                shape: CircleBorder(),
-                elevation: 2.0,
-                fillColor: Colors.grey[200],
-                padding: const EdgeInsets.all(4.0),
-              ),
+              Container(
+                width: 82,
+                height: 82,
+              )
             ],
           ),
           Column(
