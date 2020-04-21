@@ -4,7 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 class CalendarSection extends StatelessWidget {
   final Map<DateTime, List> events;
   final bool isTodaysEntryComplete;
-  CalendarController calendarController;
+  final CalendarController calendarController;
 
   CalendarSection(
       {this.events, this.isTodaysEntryComplete, this.calendarController});

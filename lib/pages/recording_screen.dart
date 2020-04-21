@@ -7,7 +7,6 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:flutter_sound/flutter_sound_recorder.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:intl/intl.dart' show DateFormat;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:diary_app/database_accessor.dart';
@@ -265,10 +264,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
     }
   }
 
-  Future<bool> fileExists(String path) async {
-    return await File(path).exists();
-  }
-
   Widget _buildPage() {
     return FutureBuilder(
         future: isEntryComplete(),
@@ -309,11 +304,6 @@ class _RecordingScreenState extends State<RecordingScreen> {
                 ],
               ));
         });
-  }
-
-  String currentDate() {
-    final d = DateTime.now();
-    return '${d.month}/${d.day}/${d.year}';
   }
 
   // Indicates whether the audio journal for today has been completed
