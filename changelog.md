@@ -1,3 +1,6 @@
+# 0.3.1
+- Use flutter sound lite for audio recording and playback
+
 # 0.3.0
 - Reorganize the recording screen for better UX
 - Add ability pause and resume recordings

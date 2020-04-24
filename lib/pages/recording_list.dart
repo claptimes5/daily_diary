@@ -5,10 +5,10 @@ import 'package:diary_app/pages/recording_list/player_section.dart';
 import 'package:flutter/material.dart';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/database_accessor.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound_lite/flutter_sound.dart';
 import 'dart:io';
 import 'package:flutter_share/flutter_share.dart';
-import 'package:flutter_sound/flutter_sound_player.dart';
+import 'package:flutter_sound_lite/flutter_sound_player.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
@@ -231,7 +231,7 @@ class RecordingListState extends State<RecordingList> {
         appDocDir = await getApplicationDocumentsDirectory();
       }
 
-      path = p.join(appDocDir.path, path);;
+      path = p.join(appDocDir.path, path);
 
       print('playing file $path');
       if (await fileExists(path)) {
