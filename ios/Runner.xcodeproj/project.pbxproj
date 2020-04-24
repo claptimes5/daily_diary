@@ -92,6 +92,7 @@
 				A98AF98C09094809EC98D180 /* Frameworks */,
 			);
 			sourceTree = "<group>";
+			wrapsLines = 0;
 		};
 		97C146EF1CF9000F007C117D /* Products */ = {
 			isa = PBXGroup;
@@ -362,7 +363,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 2B538GY54A;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -387,7 +388,7 @@
 					"-framework",
 					"\"flutter_share\"",
 					"-framework",
-					"\"flutter_sound\"",
+					"\"flutter_sound_lite\"",
 					"-framework",
 					"\"path_provider\"",
 					"-framework",
@@ -519,7 +520,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 2B538GY54A;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -545,7 +546,7 @@
 					"-framework",
 					"\"flutter_share\"",
 					"-framework",
-					"\"flutter_sound\"",
+					"\"flutter_sound_lite\"",
 					"-framework",
 					"\"path_provider\"",
 					"-framework",
@@ -570,7 +571,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 2B538GY54A;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -596,7 +597,7 @@
 					"-framework",
 					"\"flutter_share\"",
 					"-framework",
-					"\"flutter_sound\"",
+					"\"flutter_sound_lite\"",
 					"-framework",
 					"\"path_provider\"",
 					"-framework",

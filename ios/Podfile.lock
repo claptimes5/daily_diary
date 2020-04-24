@@ -1,18 +1,14 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_ffmpeg/audio-lts (0.2.10):
-    - Flutter
-    - mobile-ffmpeg-audio (= 4.3.1.LTS)
   - flutter_local_notifications (0.0.1):
     - Flutter
   - flutter_share (0.0.1):
     - Flutter
-  - flutter_sound (0.0.1):
+  - flutter_sound_lite (0.0.1):
     - Flutter
   - FMDB (2.7.5):
     - FMDB/standard (= 2.7.5)
   - FMDB/standard (2.7.5)
-  - mobile-ffmpeg-audio (4.3.1.LTS)
   - path_provider (0.0.1):
     - Flutter
   - "permission_handler (5.0.0+hotfix.3)":
@@ -29,10 +25,9 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_ffmpeg/audio-lts (from `.symlinks/plugins/flutter_ffmpeg/ios`)
   - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
   - flutter_share (from `.symlinks/plugins/flutter_share/ios`)
-  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
+  - flutter_sound_lite (from `.symlinks/plugins/flutter_sound_lite/ios`)
   - path_provider (from `.symlinks/plugins/path_provider/ios`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - shared_preferences (from `.symlinks/plugins/shared_preferences/ios`)
@@ -43,19 +38,16 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - FMDB
-    - mobile-ffmpeg-audio
 
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_ffmpeg:
-    :path: ".symlinks/plugins/flutter_ffmpeg/ios"
   flutter_local_notifications:
     :path: ".symlinks/plugins/flutter_local_notifications/ios"
   flutter_share:
     :path: ".symlinks/plugins/flutter_share/ios"
-  flutter_sound:
-    :path: ".symlinks/plugins/flutter_sound/ios"
+  flutter_sound_lite:
+    :path: ".symlinks/plugins/flutter_sound_lite/ios"
   path_provider:
     :path: ".symlinks/plugins/path_provider/ios"
   permission_handler:
@@ -71,12 +63,10 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
-  flutter_ffmpeg: cf0a6941ef67e88248c998cc3e34f8acb0b4e454
   flutter_local_notifications: 9e4738ce2471c5af910d961a6b7eadcf57c50186
   flutter_share: 4be0208963c60b537e6255ed2ce1faae61cd9ac2
-  flutter_sound: 0e8163ceac1e00eb6d894e2ae4641ba726a2c479
+  flutter_sound_lite: dd19475d680b143ecb27c85a33101b83940d4825
   FMDB: 2ce00b547f966261cd18927a3ddb07cb6f3db82a
-  mobile-ffmpeg-audio: adc36047b8032bc0f8e5c4e6ab7cb110189d9b37
   path_provider: fb74bd0465e96b594bb3b5088ee4a4e7bb1f2a9d
   permission_handler: 4a985b5448897c27fdeadde84f7452520c0e6c58
   shared_preferences: 430726339841afefe5142b9c1f50cb6bd7793e01
@@ -84,6 +74,6 @@ SPEC CHECKSUMS:
   shared_preferences_web: 141cce0c3ed1a1c5bf2a0e44f52d31eeb66e5ea9
   sqflite: 4001a31ff81d210346b500c55b17f4d6c7589dd0
 
-PODFILE CHECKSUM: 5f5611c1415d7e0a141cf78d9beee91ecb2fd3b2
+PODFILE CHECKSUM: 063705f80a5157ef01c95569172440d6391046e9
 
 COCOAPODS: 1.8.4
