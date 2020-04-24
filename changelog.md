@@ -1,5 +1,6 @@
 # 0.3.1
 - Use flutter sound lite for audio recording and playback
+- Improve hiding of keyboard when user clicks outside it
 
 # 0.3.0
 - Reorganize the recording screen for better UX

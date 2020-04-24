@@ -17,14 +17,25 @@ class MyApp extends StatelessWidget {
     final DatabaseAccessor da = DatabaseAccessor();
     da.createRecordingsTable();
 
-    return MaterialApp(
-      title: 'Daily Diary',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // Add the 3 lines from here...
-        primaryColor: Colors.white,
-      ),
-      home: DiaryAppHome(),
+    // We use GestureDetector so that clicking anywhere outside of a keyboard
+    // will close the keyboard (i.e. on the setting screen)
+    return GestureDetector(
+        onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
+        },
+        child: MaterialApp(
+          title: 'Daily Diary',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            // Add the 3 lines from here...
+            primaryColor: Colors.white,
+          ),
+          home: DiaryAppHome(),
+        )
     );
   }
 }
