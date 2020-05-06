@@ -103,7 +103,7 @@ packages:
       path: "../flutter_sound"
       relative: true
     source: path
-    version: "4.0.0-beta.3"
+    version: "4.0.4+1"
   flutter_test:
     dependency: "direct dev"
     description: flutter

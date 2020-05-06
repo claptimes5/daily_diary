@@ -172,7 +172,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
 
         _recorderSubscription = flutterSoundRecorder.onRecorderStateChanged.listen((e) {
 
-          if (e.currentPosition.toInt() >= _maxRecordingLength) {
+          if (e != null && e.currentPosition.toInt() >= _maxRecordingLength) {
             _stopRecording();
 
             this.setState(() {
@@ -181,7 +181,7 @@ class _RecordingScreenState extends State<RecordingScreen> {
           }
 
           this.setState(() {
-            this._currentPosition = e.currentPosition.toInt();
+            this._currentPosition = (e != null) ? e.currentPosition.toInt() : 0;
           });
         });
 
