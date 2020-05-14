@@ -1,3 +1,4 @@
+import 'package:diary_app/services/backup_restore.dart';
 import 'package:diary_app/services/google_drive.dart';
 import 'package:diary_app/ui/common_switch.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,9 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
       'google_drive_backup_enabled';
   final String googleBackupFolderIdSettingsKey =
       'google_drive_backup_folder_id';
+  BackupRestore br = BackupRestore();
+  int recordingsNotBackedUpCount = 0;
+  bool isBackingUp = false;
 
   @override
   void initState() {
@@ -28,19 +32,16 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     _loadSettings();
   }
 
-  void _loadSettings() async {
+  Future<bool> _loadSettings() async {
     prefs = await SharedPreferences.getInstance();
+    recordingsNotBackedUpCount = await br.recordingsNotBackedUpCount();
+  return true;
 
-    // Load whether backups are enabled
-    bool _googleDriveBackupEnabled =
-        (prefs.getBool(googleDriveBackupEnabledSettingsKey) ?? false);
-    String _googleDriveBackupFolderId =
-        prefs.getString(googleBackupFolderIdSettingsKey);
 
-    this.setState(() {
-      googleDriveBackupEnabled = _googleDriveBackupEnabled;
-      googleDriveBackupFolderId = _googleDriveBackupFolderId;
-    });
+//    this.setState(() {
+//      googleDriveBackupEnabled = _googleDriveBackupEnabled;
+//      googleDriveBackupFolderId = _googleDriveBackupFolderId;
+//    });
   }
 
   void toggleDriveBackup(val) async {
@@ -65,24 +66,53 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 2.0,
-      child: Column(
-        children: [
-          ListTile(
-            leading: Icon(
-              Icons.backup,
-              color: Colors.black26,
-            ),
-            title: Text("Drive Backup Enabled"),
-            trailing: CommonSwitch(
-              defValue: googleDriveBackupEnabled,
-              onChanged: toggleDriveBackup,
-            ),
-          )
-        ],
-      ),
+    return FutureBuilder(
+      future: _loadSettings(),
+      builder: (BuildContext context, snapshot) {
+        print(snapshot.hasData);
+        if (snapshot.hasData) {
+          print('TODO REMOVE: hasData setting prefs');
+          // Load whether backups are enabled
+          googleDriveBackupEnabled =
+          (prefs.getBool(googleDriveBackupEnabledSettingsKey) ?? false);
+          googleDriveBackupFolderId =
+          prefs.getString(googleBackupFolderIdSettingsKey);
+        }
+
+        return Card(
+          color: Colors.white,
+          elevation: 2.0,
+          child: Column(
+            children: [
+              ListTile(
+                leading: Icon(
+                  Icons.backup,
+                  color: Colors.black26,
+                ),
+                title: Text("Drive Backup Enabled"),
+                trailing: CommonSwitch(
+                  defValue: googleDriveBackupEnabled,
+                  onChanged: toggleDriveBackup,
+                ),
+              ),
+              Text("Items to backup: $recordingsNotBackedUpCount"),
+              FlatButton(
+                child: Text('Initiate Backup'),
+                onPressed: startBackup(googleDriveBackupEnabled),
+              )
+            ],
+          ),
+        );
+      },
     );
+  }
+
+
+  Function startBackup(bool isBackupEnabled) {
+    if (!isBackupEnabled || isBackingUp) {
+      return null;
+    } else {
+      return br.backup;
+    }
   }
 }

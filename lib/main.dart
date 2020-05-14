@@ -15,10 +15,12 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+
+
   @override
   Widget build(BuildContext context) {
     final DatabaseAccessor da = DatabaseAccessor();
-    da.createRecordingsTable();
+    da.initDatabase();
 
     // We use GestureDetector so that clicking anywhere outside of a keyboard
     // will close the keyboard (i.e. on the setting screen)
