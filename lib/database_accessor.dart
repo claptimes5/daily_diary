@@ -22,20 +22,13 @@ class DatabaseAccessor {
     );
   }
 
-  Future<Database> createRecordingsTable() async {
-    return openDatabase(
-      join(await getDatabasesPath(), dbName),
-
-      onCreate: (db, version) {
-        return db.execute(
-          "CREATE TABLE recordings(id INTEGER PRIMARY KEY autoincrement, time TEXT, path TEXT)",
-        );
-      },
-      version: 1,
-    );
+  Future<void> createRecordingsTable() async {
+    print('creating recordings table');
+    final Database db = await getDatabase();
+    await db.execute(Recording.tableSql);
   }
 
-  Future<Database> createRecordingBackupsTable() async {
+  Future<void> createRecordingBackupsTable() async {
     print('creating recording_backups table');
     final Database db = await getDatabase();
     await db.execute(RecordingBackup.tableSql);
@@ -128,5 +121,11 @@ class DatabaseAccessor {
     return List.generate(maps.length, (i) {
       return Recording.fromMap(maps[i]);
     });
+  }
+
+  Future<void> dropTable(String tableName) async {
+    print('Dropping table $tableName');
+    final Database db = await getDatabase();
+    await db.execute('DROP TABLE $tableName');
   }
 }

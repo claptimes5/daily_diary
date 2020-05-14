@@ -5,12 +5,14 @@ class RecordingBackup implements DbModel {
   final int id;
   final int recordingId;
   final String backupService;
+  final String backupFileId;
   final DateTime createdAt;
 
   static final String tableSql = "CREATE TABLE IF NOT EXISTS recording_backups("
       "id INTEGER PRIMARY KEY autoincrement, "
       "recording_id INTEGER,"
       "backup_service TEXT,"
+      "backup_file_id TEXT,"
       "created_at TEXT"
       ")";
 
@@ -18,7 +20,7 @@ class RecordingBackup implements DbModel {
     return tableName;
   }
 
-  RecordingBackup({this.id, this.createdAt, this.recordingId, this.backupService});
+  RecordingBackup({this.id, this.createdAt, this.recordingId, this.backupService, this.backupFileId});
 
   Map<String, dynamic> toMap() {
     int mapId;
@@ -31,6 +33,7 @@ class RecordingBackup implements DbModel {
       'id': mapId,
       'recording_id': recordingId,
       'backup_service': backupService,
+      'backup_file_id': backupFileId,
       'created_at': createdAt.toIso8601String(),
     };
   }

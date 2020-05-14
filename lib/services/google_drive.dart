@@ -15,6 +15,7 @@ const _scopes = [ga.DriveApi.DriveFileScope];
 
 class GoogleDrive {
   final storage = SecureStorage();
+  final String defaultFolderName = "Daily Dairy Entries";
 
   //Get Authenticated Http Client
   Future<http.Client> getHttpClient() async {
@@ -62,7 +63,7 @@ class GoogleDrive {
     var client = await getHttpClient();
     var drive = ga.DriveApi(client);
     ga.File fileMetadata = ga.File();
-    fileMetadata.name = "Daily Dairy Entries";
+    fileMetadata.name = defaultFolderName;
     fileMetadata.mimeType = "application/vnd.google-apps.folder";
 
     ga.File response = await drive.files.create(fileMetadata, $fields: 'id');
@@ -78,8 +79,20 @@ class GoogleDrive {
 
     try {
       ga.FileList folders = await drive.files.list(
-          q: "mimeType='application/vnd.google-apps.folder' and trashed=false and id='$folderId'");
-      return folders.files.length > 0;
+          q: "mimeType='application/vnd.google-apps.folder' and trashed=false and name='$defaultFolderName'",
+          $fields: "nextPageToken, files(id, name)");
+
+      bool folderFound = false;
+
+      List<ga.File> files = folders.files;
+      for (int i = 0; i < files.length; i++) {
+        if (files[i].id == folderId) {
+          folderFound = true;
+          break;
+        }
+      }
+
+      return folderFound;
 
     } on commons.ApiRequestError catch (e) {
       print(e.message);
@@ -88,21 +101,42 @@ class GoogleDrive {
   }
 
   //Upload File
-  Future<bool> upload(File file) async {
+  Future<String> upload(File file, List<String> parents) async {
     var client = await getHttpClient();
     var drive = ga.DriveApi(client);
     print("Uploading file");
     ga.File driveFile = ga.File();
     driveFile.name = p.basename(file.absolute.path);
-    driveFile.parents = ['19Fj2yLMTM59esTDPf7t81O_JQqEiby1s'];
+    driveFile.parents = parents;
 
     try {
-      var response = await drive.files.create(driveFile,
+      ga.File response = await drive.files.create(driveFile,
+          uploadMedia: ga.Media(file.openRead(), file.lengthSync()));
+      print("Result ${response.toJson()}");
+      return response.id;
+    } on commons.ApiRequestError catch (e) {
+      print("Failed to upload file: ${file.path}");
+      print(e.toString());
+      print(e.message);
+      return null;
+    }
+  }
+
+  Future<bool> update(File file, String fileId) async {
+    var client = await getHttpClient();
+    var drive = ga.DriveApi(client);
+
+    print("Updating file");
+    ga.File driveFile = ga.File();
+    driveFile.name = p.basename(file.absolute.path);
+
+    try {
+      ga.File response = await drive.files.update(driveFile, fileId,
           uploadMedia: ga.Media(file.openRead(), file.lengthSync()));
       print("Result ${response.toJson()}");
       return true;
     } on commons.ApiRequestError catch (e) {
-      print("Failed to upload file: ${file.path}");
+      print("Failed to update file: ${file.path}");
       print(e.toString());
       print(e.message);
       return false;

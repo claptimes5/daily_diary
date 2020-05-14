@@ -11,6 +11,11 @@ class Recording implements DbModel {
   String path;
   static final tableName = 'recordings';
 
+  static final String tableSql =  "CREATE TABLE IF NOT EXISTS recordings("
+      "id INTEGER PRIMARY KEY autoincrement, "
+      "time TEXT, "
+      "path TEXT)";
+
   String getTableName() {
     return tableName;
   }

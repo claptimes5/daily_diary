@@ -99,6 +99,10 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
               FlatButton(
                 child: Text('Initiate Backup'),
                 onPressed: startBackup(googleDriveBackupEnabled),
+              ),
+              FlatButton(
+                child: Text('Reset Backup'),
+                onPressed: resetBackup(googleDriveBackupEnabled),
               )
             ],
           ),
@@ -113,6 +117,14 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
       return null;
     } else {
       return br.backup;
+    }
+  }
+
+  Function resetBackup(bool isBackupEnabled) {
+    if (!isBackupEnabled || isBackingUp) {
+      return null;
+    } else {
+      return br.resetBackupHistory;
     }
   }
 }
