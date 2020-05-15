@@ -110,9 +110,13 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
                   onChanged: toggleDriveBackup,
                 ),
               ),
-              Text("Items to backup: $recordingsNotBackedUpCount"),
-              FlatButton(
-                child: Text('Initiate Backup'),
+              ListTile(
+                title: Text("Recordings Needing Backup"),
+                trailing: Text(recordingsNotBackedUpCount.toString()),
+              ),
+              OutlineButton(
+                padding: EdgeInsets.only(top: 15, bottom: 15, left: 20, right: 20),
+                child: Text('Initiate Backup', style: TextStyle(fontSize: 16),),
                 onPressed: () => startBackup(context),
               ),
               Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
