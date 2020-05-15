@@ -94,37 +94,45 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
           prefs.getString(googleBackupFolderIdSettingsKey);
         }
 
+        List<Widget> cardChildren = [
+          ListTile(
+            leading: Icon(
+              Icons.backup,
+              color: Colors.black26,
+            ),
+            title: Text("Drive Backup Enabled"),
+            trailing: CommonSwitch(
+              defValue: googleDriveBackupEnabled,
+              onChanged: toggleDriveBackup,
+            ),
+          ),
+        ];
+
+        if (googleDriveBackupEnabled) {
+          cardChildren.addAll([ListTile(
+            title: Text("Recordings Needing Backup"),
+            trailing: Text(recordingsNotBackedUpCount.toString()),
+          ),
+            OutlineButton(
+              padding: EdgeInsets.only(
+                  top: 15, bottom: 15, left: 20, right: 20),
+              child: Text('Initiate Backup', style: TextStyle(fontSize: 16),),
+              onPressed: () => startBackup(context),
+            ),
+            Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
+            FlatButton(
+              child: Text(
+                'Reset Backup History', style: TextStyle(color: Colors.red),),
+              onPressed: resetBackup(googleDriveBackupEnabled, context),
+            )
+          ]);
+        }
+
         return Card(
           color: Colors.white,
           elevation: 2.0,
           child: Column(
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.backup,
-                  color: Colors.black26,
-                ),
-                title: Text("Drive Backup Enabled"),
-                trailing: CommonSwitch(
-                  defValue: googleDriveBackupEnabled,
-                  onChanged: toggleDriveBackup,
-                ),
-              ),
-              ListTile(
-                title: Text("Recordings Needing Backup"),
-                trailing: Text(recordingsNotBackedUpCount.toString()),
-              ),
-              OutlineButton(
-                padding: EdgeInsets.only(top: 15, bottom: 15, left: 20, right: 20),
-                child: Text('Initiate Backup', style: TextStyle(fontSize: 16),),
-                onPressed: () => startBackup(context),
-              ),
-              Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
-              FlatButton(
-                child: Text('Reset Backup History', style: TextStyle(color: Colors.red),),
-                onPressed: resetBackup(googleDriveBackupEnabled, context),
-              )
-            ],
+            children: cardChildren,
           ),
         );
       },
