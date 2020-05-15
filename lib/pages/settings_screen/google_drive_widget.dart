@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:diary_app/services/backup_restore.dart';
 import 'package:diary_app/services/google_drive.dart';
+import 'package:diary_app/ui/alert_dialog.dart';
 import 'package:diary_app/ui/common_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,8 +26,12 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
   final String googleBackupFolderIdSettingsKey =
       'google_drive_backup_folder_id';
   BackupRestore br = BackupRestore();
+  StreamSubscription _backupRestoreSubscription;
   int recordingsNotBackedUpCount = 0;
   bool isBackingUp = false;
+  // Used to display the progress of the backup restore process
+  int backupRestoreIndex = 0;
+  int backupRestoreTotal = 0;
 
   @override
   void initState() {
@@ -44,6 +51,14 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
 //    });
   }
 
+  @override
+  void dispose() {
+    // TODO: stop backup or move to background
+    cancelBackupRestoreSubscriptions();
+
+    super.dispose();
+  }
+
   void toggleDriveBackup(val) async {
     if (val) {
       await drive.authenticate();
@@ -51,7 +66,7 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
       drive.clearAuthentication();
     }
 
-    bool newVal = await drive.isAuthenticated();
+    bool newVal = await drive.hasCredentialsStored();
 
     prefs
         .setBool(googleDriveBackupEnabledSettingsKey, newVal)
@@ -98,8 +113,9 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
               Text("Items to backup: $recordingsNotBackedUpCount"),
               FlatButton(
                 child: Text('Initiate Backup'),
-                onPressed: startBackup(googleDriveBackupEnabled),
+                onPressed: () => startBackup(context),
               ),
+              Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
               FlatButton(
                 child: Text('Reset Backup'),
                 onPressed: resetBackup(googleDriveBackupEnabled),
@@ -111,12 +127,41 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     );
   }
 
+//  Function backupFunction(bool isBackupEnabled) {
+//    if (!isBackupEnabled || isBackingUp) {
+//      return null;
+//    } else {
+//      return startBackup;
+//    }
+//  }
 
-  Function startBackup(bool isBackupEnabled) {
-    if (!isBackupEnabled || isBackingUp) {
-      return null;
-    } else {
-      return br.backup;
+  void startBackup(BuildContext context) {
+
+    br.prepare();
+
+    _backupRestoreSubscription = br.onBackupRestoreStarted.listen((e) {
+      if (e != null) {
+        this.setState(() {
+          backupRestoreIndex = e.currentItem;
+          backupRestoreTotal = e.totalItems;
+        });
+      }
+    });
+
+    br.backup().catchError((e) {
+      print(e.message);
+
+      // Disable cloud backup
+      toggleDriveBackup(false);
+
+      AlertDialogBox().show(context, 'Error with cloud backup', 'Please try reenabling the backup service', 'Ok');
+    });
+  }
+
+  void cancelBackupRestoreSubscriptions() {
+    if (_backupRestoreSubscription != null) {
+      _backupRestoreSubscription.cancel();
+      _backupRestoreSubscription = null;
     }
   }
 

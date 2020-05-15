@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/models/recording_backup.dart';
 import 'package:diary_app/services/google_drive.dart';
+import 'package:flutter/material.dart';
+import 'package:googleapis_auth/auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../database_accessor.dart';
@@ -15,6 +18,8 @@ class BackupRestore {
   final String googleDriveBackupFolderIdKey = 'google_drive_backup_folder';
   final String databaseFileIdKey = 'google_drive_database_file_id';
   static final String lastBackupAtKey = 'last_backup_at';
+  StreamController<BackupRestoreStatus> _backupRestoreController = StreamController.broadcast();
+  Stream<BackupRestoreStatus> get onBackupRestoreStarted => _backupRestoreController.stream;
 
   // Check database to determine if all files are backed up
   Future<bool> isBackupComplete() async {
@@ -79,59 +84,83 @@ class BackupRestore {
   // if file has not been backed up yet, upload
   //    - mark file has uploaded in db
   // 3. Once all files are uploaded, back up db file
-  void backup() async {
-    loadPrefs();
-    await da.createRecordingBackupsTable();
-    String folderId = await createBackupFolder();
-    List<String> folder = [folderId];
+  Future<void> backup() async {
+    try {
+      loadPrefs();
 
-    List<Recording> recordings = await da.recordingsToBackup();
-    String appDocPath = await getLocalRecordingsFolder();
+      // Ensure the recording_backups table exists to store the backup history
+      await da.createRecordingBackupsTable();
 
-    for (var r in recordings) {
-      String path = r.path;
-      // Versions of the app > 0.1.1 use relative path to store files. This determines if
-      // a relative path was used and prepends the appropriate path prefix.
-      if (path.startsWith('/')) {
-        // Split the absolute path and the prepend the file name with the diary entries directory
-        // to construct the appropriate relative path
-        path = path.split('/').last;
-        path = p.join('diary_entries', path);
+      // Create folder on Drive to use for our uploaded files
+      String folderId = await createBackupFolder();
+      List<String> folder = [folderId];
+
+      List<Recording> recordings = await da.recordingsToBackup();
+      String appDocPath = await getLocalRecordingsFolder();
+
+      // Total files include all recordings plus the database file
+      int totalFilesToBackup = recordings.length + 1;
+
+      // Upload all recordings
+      for (int i = 0; i < recordings.length; i++) {
+        _updateBackupRestoreProgress(i + 1, totalFilesToBackup);
+
+        Recording r = recordings[i];
+
+        String path = r.path;
+        // Versions of the app > 0.1.1 use relative path to store files. This determines if
+        // a relative path was used and prepends the appropriate path prefix.
+        if (path.startsWith('/')) {
+          // Split the absolute path and the prepend the file name with the diary entries directory
+          // to construct the appropriate relative path
+          path = path
+              .split('/')
+              .last;
+          path = p.join('diary_entries', path);
+        }
+
+        String fullDirPath = p.join(appDocPath, path);
+
+        // Upload file to Google Drive and store record of backup in DB if succeeded
+        String fileId = await drive.upload(File(fullDirPath), folder);
+
+        if (fileId != null) {
+          await da.insertModel(RecordingBackup(
+              createdAt: DateTime.now(),
+              recordingId: r.id,
+              backupFileId: fileId,
+              backupService: 'google_drive'));
+        } else {
+          print('Failed to upload recording: ${r.path}');
+        }
       }
 
-      String fullDirPath = p.join(appDocPath, path);
+      // Upload database file now that all recordings have been marked as backed up
+      String databaseFileId = prefs.getString(databaseFileIdKey);
+      File databaseFile = File((await da.getDatabase()).path);
+      bool fileUpdated = false;
 
-      // Upload file to Google Drive and store record of backup in DB if succeeded
-      String fileId = await drive.upload(File(fullDirPath), folder);
-
-      if (fileId != null) {
-        await da.insertModel(RecordingBackup(
-            createdAt: DateTime.now(),
-            recordingId: r.id,
-            backupFileId: fileId,
-            backupService: 'google_drive'));
+      if (databaseFileId == null) {
+        // Upload database file for the first time
+        databaseFileId = await drive.upload(databaseFile, folder);
+        prefs.setString(databaseFileIdKey, databaseFileId);
+        fileUpdated = true;
       } else {
-        print('Failed to upload recording: ${r.path}');
+        fileUpdated = await drive.update(databaseFile, databaseFileId);
       }
-    }
 
-    String databaseFileId = prefs.getString(databaseFileIdKey);
-    File databaseFile = File((await da.getDatabase()).path);
-    bool fileUpdated = false;
+      _updateBackupRestoreProgress(totalFilesToBackup, totalFilesToBackup);
 
-    if (databaseFileId == null) {
-      // Upload database file for the first time
-      databaseFileId = await drive.upload(databaseFile, folder);
-      prefs.setString(databaseFileIdKey, databaseFileId);
-      fileUpdated = true;
-    } else {
-      fileUpdated = await drive.update(databaseFile, databaseFileId);
-    }
+      // Store the last time that a backup was successful
+      if (fileUpdated) {
+        prefs.setString(lastBackupAtKey, DateTime.now().toIso8601String());
+      } else {
+        print('Backup of database failed');
+      }
 
-    if (fileUpdated) {
-      prefs.setString(lastBackupAtKey, DateTime.now().toIso8601String());
-    } else {
-      print('Backup of database failed');
+      _removeBackupRestoreCallback();
+    } on AccessDeniedException catch (e) {
+      throw BackupRestoreException(e.message);
     }
   }
 
@@ -139,6 +168,7 @@ class BackupRestore {
   void resetBackupHistory() {
 //    da.delete(RecordingBackup.tableName, null);
     da.dropTable(RecordingBackup.tableName);
+    prefs.setString(lastBackupAtKey, null);
   }
 
 // TODO:
@@ -149,4 +179,48 @@ class BackupRestore {
 //    3. Download database file and recordings
 // else merge in files and database
 // 4. Set folder ID to be backup folder
+
+  void _updateBackupRestoreProgress(int currentFileIndex, int totalFiles) {
+    _backupRestoreController.add(BackupRestoreStatus(currentFileIndex, totalFiles));
+  }
+
+  Future<void> _setBackupRestoreCallback() async {
+    if (_backupRestoreController == null) {
+      _backupRestoreController = StreamController.broadcast();
+    }
+  }
+
+  void _removeBackupRestoreCallback() {
+    if (_backupRestoreController != null) {
+      _backupRestoreController
+        ..add(null)
+        ..close();
+      _backupRestoreController = null;
+    }
+  }
+
+  // Initialize the stream controller
+  void prepare() {
+    _setBackupRestoreCallback();
+  }
+}
+
+class BackupRestoreStatus {
+  final int currentItem;
+  final int totalItems;
+
+  BackupRestoreStatus(this.currentItem, this.totalItems);
+}
+
+class BackupRestoreException implements Exception {
+  final String previousExceptionMessage;
+
+  BackupRestoreException(this.previousExceptionMessage);
+
+  String get message => 'Backup or restore failed: ' + previousExceptionMessage;
+
+  @override
+  String toString() {
+    return message;
+  }
 }

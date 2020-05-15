@@ -49,7 +49,7 @@ class GoogleDrive {
     await getHttpClient();
   }
 
-  Future<bool> isAuthenticated() async {
+  Future<bool> hasCredentialsStored() async {
     var credentials = await storage.getCredentials();
     return (credentials != null);
   }
