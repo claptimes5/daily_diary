@@ -103,8 +103,6 @@ class BackupRestore {
 
       // Upload all recordings
       for (int i = 0; i < recordings.length; i++) {
-        _updateBackupRestoreProgress(i + 1, totalFilesToBackup);
-
         Recording r = recordings[i];
 
         String path = r.path;
@@ -133,6 +131,8 @@ class BackupRestore {
         } else {
           print('Failed to upload recording: ${r.path}');
         }
+
+        _updateBackupRestoreProgress(i + 1, totalFilesToBackup);
       }
 
       // Upload database file now that all recordings have been marked as backed up
@@ -168,6 +168,7 @@ class BackupRestore {
   void resetBackupHistory() {
 //    da.delete(RecordingBackup.tableName, null);
     da.dropTable(RecordingBackup.tableName);
+    prefs.setString(databaseFileIdKey, null);
     prefs.setString(lastBackupAtKey, null);
   }
 
