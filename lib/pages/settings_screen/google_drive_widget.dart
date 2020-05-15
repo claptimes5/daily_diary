@@ -121,8 +121,8 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
               ),
               Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
               FlatButton(
-                child: Text('Reset Backup'),
-                onPressed: resetBackup(googleDriveBackupEnabled),
+                child: Text('Reset Backup History', style: TextStyle(color: Colors.red),),
+                onPressed: resetBackup(googleDriveBackupEnabled, context),
               )
             ],
           ),
@@ -169,16 +169,19 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     }
   }
 
-  Function resetBackup(bool isBackupEnabled) {
+  Function resetBackup(bool isBackupEnabled, BuildContext context) {
     if (!isBackupEnabled || isBackingUp) {
       return null;
     } else {
-      return () {
-        br.resetBackupHistory();
-        setState(() {
-          backupRestoreIndex = 0;
-          backupRestoreTotal = 0;
-        });
+      return () async {
+        if (await AlertDialogBox.showConfirm(context, 'Are you sure?',
+            'This will remove the local history of your recording backups. It will not remove any files from your cloud provider.')) {
+          br.resetBackupHistory();
+          setState(() {
+            backupRestoreIndex = 0;
+            backupRestoreTotal = 0;
+          });
+        }
       };
     }
   }
