@@ -169,7 +169,13 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     if (!isBackupEnabled || isBackingUp) {
       return null;
     } else {
-      return br.resetBackupHistory;
+      return () {
+        br.resetBackupHistory();
+        setState(() {
+          backupRestoreIndex = 0;
+          backupRestoreTotal = 0;
+        });
+      };
     }
   }
 }
