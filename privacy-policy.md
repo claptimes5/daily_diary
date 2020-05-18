@@ -1,6 +1,6 @@
 ## Privacy Policy
 
-Taim Technologies, LLC built the Daily Diary app as a Free app. This SERVICE is provided by Taim Technologies, LLC at no cost and is intended for use as is.
+Taim Technologies, LLC built the Daily Diary app as a free app. This SERVICE is provided by Taim Technologies, LLC at no cost and is intended for use as is.
 
 This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone decided to use our Service.
 
@@ -17,6 +17,9 @@ The app does use third party services that may collect information used to ident
 Link to privacy policy of third party service providers used by the app
 
 *   [Google Play Services](https://www.google.com/policies/privacy/)
+
+**Other third-party services**
+You may optionally use an online cloud backup platform that is integrated in this app. If so, you must separately agree and be governed by their privacy policies and terms and conditions. If you use the Google Drive backup option, then you agree to share your email, profile and openid information with us. We will use this information to authenticate the app with your Drive account. We cannot be held responsible for any loss of access to this data or any accidental deletion or unintentional sharing. 
 
 **Log Data**
 
