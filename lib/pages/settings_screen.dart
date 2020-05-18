@@ -154,7 +154,13 @@ class _SettingsState extends State<SettingsScreen> {
               ],
             ),
           ),
-          Text("Google Drive Backup"),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "Cloud Backup Settings",
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          ),
           GoogleDriveWidget()
         ],
       ),
