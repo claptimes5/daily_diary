@@ -100,7 +100,7 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
               Icons.backup,
               color: Colors.black26,
             ),
-            title: Text("Drive Backup Enabled"),
+            title: Text("Google Drive Backup"),
             trailing: CommonSwitch(
               defValue: googleDriveBackupEnabled,
               onChanged: toggleDriveBackup,
@@ -117,7 +117,7 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
               padding: EdgeInsets.only(
                   top: 15, bottom: 15, left: 20, right: 20),
               child: Text('Initiate Backup', style: TextStyle(fontSize: 16),),
-              onPressed: () => startBackup(context),
+              onPressed: onStartBackupPressed(context),
             ),
             Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
             FlatButton(
@@ -147,6 +147,16 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
 //    }
 //  }
 
+  Function onStartBackupPressed(context) {
+    if (isBackingUp) {
+      return null;
+    } else {
+      return () {
+        startBackup(context);
+      };
+    }
+  }
+
   void startBackup(BuildContext context) {
 
     br.prepare();
@@ -156,8 +166,16 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
         this.setState(() {
           backupRestoreIndex = e.currentItem;
           backupRestoreTotal = e.totalItems;
+
+          if (backupRestoreTotal == backupRestoreIndex) {
+            isBackingUp = false;
+          }
         });
       }
+    });
+
+    setState(() {
+      isBackingUp = true;
     });
 
     br.backup().catchError((e) {
@@ -178,7 +196,7 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
   }
 
   Function resetBackup(bool isBackupEnabled, BuildContext context) {
-    if (!isBackupEnabled || isBackingUp) {
+    if (isBackingUp) {
       return null;
     } else {
       return () async {
