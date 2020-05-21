@@ -3,20 +3,15 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:global_configuration/global_configuration.dart';
 import 'diary_app_home.dart';
 import 'database_accessor.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'config/secrets.dart';
 
 void main() {
-  GlobalConfiguration().loadFromMap(secrets);
   initializeDateFormatting().then((_) => runApp(MyApp()));
 }
 
 class MyApp extends StatelessWidget {
-
-
   @override
   Widget build(BuildContext context) {
     final DatabaseAccessor da = DatabaseAccessor();

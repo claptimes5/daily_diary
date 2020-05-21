@@ -34,6 +34,8 @@ android/key.properties
 *.aab
 assets/cfg/*
 lib/config/secrets.dart
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
 
 # Web related
 lib/generated_plugin_registrant.dart

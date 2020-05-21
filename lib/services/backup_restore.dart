@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/models/recording_backup.dart';
 import 'package:diary_app/services/google_drive.dart';
-import 'package:flutter/material.dart';
-import 'package:googleapis_auth/auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import '../database_accessor.dart';
@@ -159,8 +157,8 @@ class BackupRestore {
       }
 
       _removeBackupRestoreCallback();
-    } on AccessDeniedException catch (e) {
-      throw BackupRestoreException(e.message);
+    } on Exception catch (e) {
+      throw BackupRestoreException(e.toString());
     }
   }
 

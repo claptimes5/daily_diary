@@ -1,21 +1,14 @@
 import 'dart:io';
-import 'package:diary_app/services/secure_storage.dart';
-import 'package:global_configuration/global_configuration.dart';
 import 'package:googleapis/abusiveexperiencereport/v1.dart' as commons;
 import 'package:googleapis/drive/v3.dart' as ga;
-import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
-import 'package:url_launcher/url_launcher.dart';
 
 import 'package:google_sign_in/google_sign_in.dart'
     show GoogleSignIn, GoogleSignInAccount;
 
 import 'package:http/io_client.dart';
 import 'package:http/http.dart';
-
-String _clientId = GlobalConfiguration().getString("drive_client_id");
-String _clientSecret = GlobalConfiguration().getString("drive_client_secret");
 
 const _scopes = [ga.DriveApi.DriveFileScope];
 
@@ -24,7 +17,6 @@ GoogleSignIn _googleSignIn = GoogleSignIn(
 );
 
 class GoogleDrive {
-  final storage = SecureStorage();
   final String defaultFolderName = "Daily Dairy Entries";
 
   Future<http.Client> getHttpClient() async {
@@ -44,35 +36,6 @@ class GoogleDrive {
 
     return GoogleHttpClient(authHeaders);
   }
-
-
-  //Get Authenticated Http Client
-//  Future<http.Client> getHttpClient() async {
-//    //Get Credentials
-//    var credentials = await storage.getCredentials();
-//    if (credentials == null) {
-//      //Needs user authentication
-//      var authClient = await clientViaUserConsent(
-//          ClientId(_clientId, _clientSecret), _scopes, (url) {
-//        //Open Url in Browser
-//        launch(url);
-//      });
-//      //Save Credentials
-//      await storage.saveCredentials(authClient.credentials.accessToken,
-//          authClient.credentials.refreshToken);
-//      return authClient;
-//    } else {
-//      print(credentials["expiry"]);
-//      //Already authenticated
-//      return authenticatedClient(
-//          http.Client(),
-//          AccessCredentials(
-//              AccessToken(credentials["type"], credentials["data"],
-//                  DateTime.tryParse(credentials["expiry"])),
-//              credentials["refreshToken"],
-//              _scopes));
-//    }
-//  }
 
   Future<void> authenticate() async {
     await getHttpClient();
@@ -141,7 +104,7 @@ class GoogleDrive {
     try {
       ga.File response = await drive.files.create(driveFile,
           uploadMedia: ga.Media(file.openRead(), file.lengthSync()));
-      print("Result ${response.toJson()}");
+
       return response.id;
     } on commons.ApiRequestError catch (e) {
       print("Failed to upload file: ${file.path}");

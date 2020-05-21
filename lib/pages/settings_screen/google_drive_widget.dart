@@ -84,7 +84,7 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     return FutureBuilder(
       future: _loadSettings(),
       builder: (BuildContext context, snapshot) {
-        print(snapshot.hasData);
+
         if (snapshot.hasData) {
           print('TODO REMOVE: hasData setting prefs');
           // Load whether backups are enabled
