@@ -10,3 +10,9 @@ More to come!
 ## Availability
 - App Store: https://apps.apple.com/app/id1503733146
 - Play Store: https://play.google.com/store/apps/details?id=com.taimtechnologies.daily_diary
+
+## TODO
+- Backup in the background
+- Optional geolocation for each audio entry and display map
+- Improve player
+- Export combined file of entries

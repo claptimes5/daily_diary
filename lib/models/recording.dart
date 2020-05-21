@@ -1,18 +1,29 @@
+import 'package:diary_app/models/db_model.dart';
+
 final String columnId = 'id';
 final String columnTime = 'time';
 final String columnPath = 'path';
 final String tableRecording = 'recordings';
 
-class Recording {
+class Recording implements DbModel {
   int id;
   DateTime time;
   String path;
-  final tableName = 'recordings';
+  static final tableName = 'recordings';
+
+  static final String tableSql =  "CREATE TABLE IF NOT EXISTS recordings("
+      "id INTEGER PRIMARY KEY autoincrement, "
+      "time TEXT, "
+      "path TEXT)";
+
+  String getTableName() {
+    return tableName;
+  }
 
   Recording({this.id, this.time, this.path});
 
   Map<String, dynamic> toMap() {
-    int mapId = null;
+    int mapId;
 
     if (id != null) {
       mapId = id;
@@ -33,7 +44,7 @@ class Recording {
 
   Recording.fromMap(Map<String, dynamic> map) {
     id = map[columnId];
-    time = map[columnTime];
+    time = DateTime.parse(map[columnTime]);
     path = map[columnPath];
   }
 }

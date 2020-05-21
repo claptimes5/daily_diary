@@ -77,7 +77,7 @@ class RecordingListState extends State<RecordingList> {
       print(e.toString());
     }
 
-    da.delete(r.id);
+    da.deleteRecording(r.id);
   }
 
   void onPlayerStateChanged() {

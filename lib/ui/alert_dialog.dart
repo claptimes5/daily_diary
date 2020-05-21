@@ -28,4 +28,39 @@ class AlertDialogBox {
       },
     );
   }
+
+  static Future<bool> showConfirm(
+      BuildContext context, String title, String body,
+      {String cancelButton = 'Cancel',
+      String confirmButton = 'Confirm'}) async {
+    return showDialog<bool>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: <Widget>[
+                  Text(body),
+                ],
+              ),
+            ),
+            actions: <Widget>[
+              FlatButton(
+                child: Text(cancelButton),
+                onPressed: () {
+                  Navigator.of(context).pop(false);
+                },
+              ),
+              FlatButton(
+                child: Text(confirmButton),
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ],
+          );
+        });
+  }
 }

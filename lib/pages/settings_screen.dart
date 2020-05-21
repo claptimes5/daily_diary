@@ -1,3 +1,4 @@
+import 'package:diary_app/pages/settings_screen/google_drive_widget.dart';
 import 'package:diary_app/ui/common_switch.dart';
 import 'package:diary_app/ui/input_dropdown.dart';
 import 'package:flutter/material.dart';
@@ -153,6 +154,14 @@ class _SettingsState extends State<SettingsScreen> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              "Cloud Backup Settings",
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          ),
+          GoogleDriveWidget()
         ],
       ),
   );
