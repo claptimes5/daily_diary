@@ -8,54 +8,83 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as p;
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:google_sign_in/google_sign_in.dart'
+    show GoogleSignIn, GoogleSignInAccount;
+
+import 'package:http/io_client.dart';
+import 'package:http/http.dart';
+
 String _clientId = GlobalConfiguration().getString("drive_client_id");
 String _clientSecret = GlobalConfiguration().getString("drive_client_secret");
 
 const _scopes = [ga.DriveApi.DriveFileScope];
 
+GoogleSignIn _googleSignIn = GoogleSignIn(
+  scopes: _scopes
+);
+
 class GoogleDrive {
   final storage = SecureStorage();
   final String defaultFolderName = "Daily Dairy Entries";
 
-  //Get Authenticated Http Client
   Future<http.Client> getHttpClient() async {
-    //Get Credentials
-    var credentials = await storage.getCredentials();
-    if (credentials == null) {
-      //Needs user authentication
-      var authClient = await clientViaUserConsent(
-          ClientId(_clientId, _clientSecret), _scopes, (url) {
-        //Open Url in Browser
-        launch(url);
-      });
-      //Save Credentials
-      await storage.saveCredentials(authClient.credentials.accessToken,
-          authClient.credentials.refreshToken);
-      return authClient;
-    } else {
-      print(credentials["expiry"]);
-      //Already authenticated
-      return authenticatedClient(
-          http.Client(),
-          AccessCredentials(
-              AccessToken(credentials["type"], credentials["data"],
-                  DateTime.tryParse(credentials["expiry"])),
-              credentials["refreshToken"],
-              _scopes));
+
+    GoogleSignInAccount _account = _googleSignIn.currentUser;
+
+
+    if (_account == null) {
+      _account = await _googleSignIn.signInSilently();
     }
+
+    if (_account == null) {
+      _account = await _googleSignIn.signIn();
+    }
+
+    final authHeaders = await _googleSignIn.currentUser.authHeaders;
+
+    return GoogleHttpClient(authHeaders);
   }
+
+
+  //Get Authenticated Http Client
+//  Future<http.Client> getHttpClient() async {
+//    //Get Credentials
+//    var credentials = await storage.getCredentials();
+//    if (credentials == null) {
+//      //Needs user authentication
+//      var authClient = await clientViaUserConsent(
+//          ClientId(_clientId, _clientSecret), _scopes, (url) {
+//        //Open Url in Browser
+//        launch(url);
+//      });
+//      //Save Credentials
+//      await storage.saveCredentials(authClient.credentials.accessToken,
+//          authClient.credentials.refreshToken);
+//      return authClient;
+//    } else {
+//      print(credentials["expiry"]);
+//      //Already authenticated
+//      return authenticatedClient(
+//          http.Client(),
+//          AccessCredentials(
+//              AccessToken(credentials["type"], credentials["data"],
+//                  DateTime.tryParse(credentials["expiry"])),
+//              credentials["refreshToken"],
+//              _scopes));
+//    }
+//  }
 
   Future<void> authenticate() async {
     await getHttpClient();
   }
 
   Future<bool> hasCredentialsStored() async {
-    var credentials = await storage.getCredentials();
-    return (credentials != null);
+
+    return await _googleSignIn.isSignedIn();
   }
 
   void clearAuthentication() {
-    storage.clear();
+    _googleSignIn.signOut();
   }
 
   // Returns ID of folder that was created
@@ -152,4 +181,19 @@ class GoogleDrive {
       print(f.name);
     });
   }
+}
+
+class GoogleHttpClient extends IOClient {
+  Map<String, String> _headers;
+
+  GoogleHttpClient(this._headers) : super();
+
+  @override
+  Future<IOStreamedResponse> send(BaseRequest request) =>
+      super.send(request..headers.addAll(_headers));
+
+  @override
+  Future<Response> head(Object url, {Map<String, String> headers}) =>
+      super.head(url, headers: headers..addAll(_headers));
+
 }

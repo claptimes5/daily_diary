@@ -109,23 +109,41 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
         ];
 
         if (googleDriveBackupEnabled) {
-          cardChildren.addAll([ListTile(
-            title: Text("Recordings Needing Backup"),
-            trailing: Text(recordingsNotBackedUpCount.toString()),
-          ),
+          cardChildren.addAll([
+            ListTile(
+              title: Text("Recordings Needing Backup"),
+              trailing: Text(recordingsNotBackedUpCount.toString()),
+            ),
             OutlineButton(
-              padding: EdgeInsets.only(
-                  top: 15, bottom: 15, left: 20, right: 20),
-              child: Text('Initiate Backup', style: TextStyle(fontSize: 16),),
+              padding:
+                  EdgeInsets.only(top: 15, bottom: 15, left: 20, right: 20),
+              focusColor: (isBackingUp ? Colors.green : Colors.grey),
+              child: Text(
+                'Initiate Backup',
+                style: TextStyle(fontSize: 16),
+              ),
               onPressed: onStartBackupPressed(context),
             ),
-            Text("Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
-            FlatButton(
-              child: Text(
-                'Reset Backup History', style: TextStyle(color: Colors.red),),
-              onPressed: resetBackup(googleDriveBackupEnabled, context),
-            )
           ]);
+
+          if (isBackingUp) {
+            cardChildren.add(
+              Padding(
+                padding: EdgeInsets.all(10),
+                child: Text(
+                    "Backup Progress: $backupRestoreIndex of $backupRestoreTotal"),
+              ),
+            );
+          }
+
+          cardChildren.add(FlatButton(
+            padding: EdgeInsets.only(top: 15),
+            child: Text(
+              'Reset Backup History',
+              style: TextStyle(color: Colors.red),
+            ),
+            onPressed: resetBackup(googleDriveBackupEnabled, context),
+          ));
         }
 
         return Card(
@@ -179,7 +197,8 @@ class GoogleDriveWidgetState extends State<GoogleDriveWidget> {
     });
 
     br.backup().catchError((e) {
-      print(e.message);
+      print('ERROR starting file backup');
+      print(e?.message);
 
       // Disable cloud backup
       toggleDriveBackup(false);
