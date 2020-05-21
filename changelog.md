@@ -1,3 +1,6 @@
+# 0.4.0
+- Add ability to backup recordings and database to Google Drive
+
 # 0.3.2
 - Fix issue that prevented pausing of recording
 
