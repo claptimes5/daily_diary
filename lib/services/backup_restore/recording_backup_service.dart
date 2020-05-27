@@ -3,21 +3,20 @@ import 'dart:io';
 
 import 'package:diary_app/models/recording.dart';
 import 'package:diary_app/models/recording_backup.dart';
-import 'package:diary_app/services/google_drive.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:diary_app/services/backup_restore/backup_restore.dart';
 import 'package:path/path.dart' as p;
-import '../database_accessor.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class BackupRestore {
-  GoogleDrive drive = GoogleDrive();
-  final DatabaseAccessor da = DatabaseAccessor();
-  SharedPreferences prefs;
-  final String googleDriveBackupFolderIdKey = 'google_drive_backup_folder';
-  final String databaseFileIdKey = 'google_drive_database_file_id';
+import '../../database_accessor.dart';
+import 'backup_restore_exception.dart';
+import 'backup_restore_status.dart';
+
+class RecordingBackupService extends BackupRestore {
   static final String lastBackupAtKey = 'last_backup_at';
-  StreamController<BackupRestoreStatus> _backupRestoreController = StreamController.broadcast();
-  Stream<BackupRestoreStatus> get onBackupRestoreStarted => _backupRestoreController.stream;
+  StreamController<BackupRestoreStatus> _backupRestoreController =
+      StreamController.broadcast();
+
+  Stream<BackupRestoreStatus> get onBackupRestoreStarted =>
+      _backupRestoreController.stream;
 
   // Check database to determine if all files are backed up
   Future<bool> isBackupComplete() async {
@@ -39,12 +38,6 @@ class BackupRestore {
     return recordings.length;
   }
 
-  Future<void> loadPrefs() async {
-    if (prefs == null) {
-      prefs = await SharedPreferences.getInstance();
-    }
-  }
-
   // Create backup folder on Drive if it does not already exist
   Future<String> createBackupFolder() async {
     await loadPrefs();
@@ -59,18 +52,6 @@ class BackupRestore {
     }
 
     return folderId;
-  }
-
-  Future<String> getLocalRecordingsFolder() async {
-    Directory appDocDir;
-
-    if (Platform.isAndroid) {
-      appDocDir = await getExternalStorageDirectory();
-    } else {
-      appDocDir = await getApplicationDocumentsDirectory();
-    }
-
-    return appDocDir.path;
   }
 
   // 1. Check if backup folder has been set
@@ -109,9 +90,7 @@ class BackupRestore {
         if (path.startsWith('/')) {
           // Split the absolute path and the prepend the file name with the diary entries directory
           // to construct the appropriate relative path
-          path = path
-              .split('/')
-              .last;
+          path = path.split('/').last;
           path = p.join('diary_entries', path);
         }
 
@@ -170,17 +149,9 @@ class BackupRestore {
     prefs.setString(lastBackupAtKey, null);
   }
 
-// TODO:
-// Restore
-// 1. have user select folder in drive
-// 2. Check that folder contains database file and some recordings
-// if current folder/database are empty
-//    3. Download database file and recordings
-// else merge in files and database
-// 4. Set folder ID to be backup folder
-
   void _updateBackupRestoreProgress(int currentFileIndex, int totalFiles) {
-    _backupRestoreController.add(BackupRestoreStatus(currentFileIndex, totalFiles));
+    _backupRestoreController
+        .add(BackupRestoreStatus(currentFileIndex, totalFiles));
   }
 
   Future<void> _setBackupRestoreCallback() async {
@@ -201,25 +172,5 @@ class BackupRestore {
   // Initialize the stream controller
   void prepare() {
     _setBackupRestoreCallback();
-  }
-}
-
-class BackupRestoreStatus {
-  final int currentItem;
-  final int totalItems;
-
-  BackupRestoreStatus(this.currentItem, this.totalItems);
-}
-
-class BackupRestoreException implements Exception {
-  final String previousExceptionMessage;
-
-  BackupRestoreException(this.previousExceptionMessage);
-
-  String get message => 'Backup or restore failed: ' + previousExceptionMessage;
-
-  @override
-  String toString() {
-    return message;
   }
 }

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:diary_app/services/backup_restore/file_metadata.dart';
 import 'package:googleapis/abusiveexperiencereport/v1.dart' as commons;
 import 'package:googleapis/drive/v3.dart' as ga;
 import 'package:http/http.dart' as http;
@@ -64,6 +66,28 @@ class GoogleDrive {
     return response.id;
   }
 
+  // Returns all folders that this app has permissions to
+//  Future<Map<String, String>> folderList() async {
+//    var client = await getHttpClient();
+//    var drive = ga.DriveApi(client);
+//    Map<String,String> folderList = Map();
+//
+//    try {
+//      ga.FileList folders = await drive.files.list(
+//          q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
+//          $fields: "nextPageToken, files(id, name)");
+//
+//      folders.files.forEach((element) {
+//        folderList[element.id] = element.name;
+//      });
+//
+//      return folderList;
+//    } on commons.ApiRequestError catch (e) {
+//      print(e.message);
+//      return null;
+//    }
+//  }
+
   // Returns true if the specified folder id exists in Drive
   Future<bool> folderExists(String folderId) async {
     var client = await getHttpClient();
@@ -114,6 +138,36 @@ class GoogleDrive {
     }
   }
 
+  // Download file by given ID
+  Future<Stream> download(File file, String driveId, {Function onDone}) async {
+    var client = await getHttpClient();
+    var drive = ga.DriveApi(client);
+
+    ga.Media downloadedFile = await drive.files.get(driveId, downloadOptions:  ga.DownloadOptions.FullMedia);
+    print('Writing file');
+//    downloadedFile.stream.
+//    file.writeAsBytes(await downloadedFile.stream.toList());
+//    downloadedFile.stream.listen((event) {
+//        file.writeAsBytes(event);
+//    }).asFuture();
+
+    List<int> dataStore = [];
+    downloadedFile.stream.listen((data) {
+//      print("DataReceived: ${data.length}");
+      dataStore.insertAll(dataStore.length, data);
+    }, onDone: () async {
+      await file.writeAsBytes(dataStore); //Write to that file from the datastore you created from the Media stream
+      print('File written');
+      if (onDone != null) {
+        onDone();
+      }
+    }, onError: (error) {
+      print("Error downloading file");
+    });
+
+    return downloadedFile.stream;
+  }
+
   Future<bool> update(File file, String fileId) async {
     var client = await getHttpClient();
     var drive = ga.DriveApi(client);
@@ -135,14 +189,42 @@ class GoogleDrive {
     }
   }
 
-  void list() async {
+  // Get all files that have not been trashed
+  // [name]
+  // [parentId] Include optional parent ID to scope list of files that exist
+  // inside specified folder
+  // [foldersOnly] Set to true and this will only return folders
+  Future<List<FileMetadata>> list({String name, String parentId, bool foldersOnly = false}) async {
     var client = await getHttpClient();
     var drive = ga.DriveApi(client);
-    var response = await drive.files.list();
-    print('files:');
-    response.files.forEach((f) {
-      print(f.name);
-    });
+    String queryString = 'trashed=false';
+
+    if (name != null) {
+      queryString += " and name = '$name'";
+    }
+
+    if (parentId != null) {
+      queryString += " and parents in '$parentId'";
+    }
+
+    if (foldersOnly) {
+      queryString += " and mimeType='application/vnd.google-apps.folder'";
+    }
+
+    try {
+      print('query: $queryString');
+      var response = await drive.files
+          .list(q: queryString, $fields: "nextPageToken, files(id, name)");
+
+      print('files returned: ${response.files.length}');
+
+      return response.files.map((element) {
+        return FileMetadata(element.name, element.id);
+      }).toList();
+    } on commons.ApiRequestError catch (e) {
+      print(e.toString());
+      return null;
+    }
   }
 }
 

@@ -15,7 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import 'package:table_calendar/table_calendar.dart';
-import 'package:diary_app/ui/alert_dialog.dart';
+import 'package:diary_app/ui/alert_dialog_box.dart';
 
 class RecordingScreen extends StatefulWidget {
   @override

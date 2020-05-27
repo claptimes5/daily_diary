@@ -54,6 +54,15 @@ class DatabaseAccessor {
     );
   }
 
+  Future<List<Map<String,dynamic>>> recordingPathAndDriveId() async {
+    final Database db = await getDatabase();
+    final String recordingsToBackupSql = 'SELECT r.path, rb.backup_file_id '
+        'FROM recordings r, recording_backups rb '
+        'where r.id = rb.recording_id';
+print(recordingsToBackupSql);
+    return await db.rawQuery(recordingsToBackupSql);
+  }
+
   Future<List<Recording>> recordings({DateTime startTime, DateTime endTime}) async {
     final Database db = await getDatabase();
     String whereClause = '';
@@ -75,7 +84,6 @@ class DatabaseAccessor {
 
     List<Map<String, dynamic>> maps;
     if (whereClause.length > 0) {
-      // Query the table for all The Dogs.
       maps =
       await db.query('recordings', where: whereClause, whereArgs: whereArgs);
     } else {
